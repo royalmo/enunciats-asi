@@ -4,6 +4,9 @@ Enunciats de les pràctiques d'Aplicacions i Serveis Sobre Internet (ASI),
 edició del 2025. Aquestes pràctiques i assignatura formen part de la titluació
 del Grau en Enginyeria de Sistemes TIC (iTIC).
 
+Material realitzat per Eric Roy ([eric.roy@upc.edu](mailto:eric.roy@upc.edu))
+sota la supervisió i revisió de Francisco del Águila ([fd.aguila@upc.edu](mailto:fd.aguila@upc.edu)).
+
 Podeu trobar més informació en els següents enllaços:
 
 - Pàgina del grau: [epsem.upc.edu/ca/estudis/graus/grau-en-enginyeria-de-sistemes-tic](https://epsem.upc.edu/ca/estudis/graus/grau-en-enginyeria-de-sistemes-tic)
@@ -13,23 +16,14 @@ Podeu trobar més informació en els següents enllaços:
 
 ## Generar els PDFs
 
-Primer, cal descarregar i instal·lar els snippets de Latex del grau iTIC. Només
-cal descarregar el tarfile que hi ha a l'OpenCourseWare
-( [enllaç directe](https://ocwitic.epsem.upc.edu/trans/latexbits/snippetsltx-20220622-1731-tar.gz/@@download/file/snippetsltx-20230606-1407.tar.gz) )
-i seguir les instruccions del README.
-
-Llavors, només cal executar la següent comanda amb el fitxer font que es vol :
+En una màquina Unix amb Docker instal·lat, executar:
 
 ```sh
-pdflatex path/to/file.tex
+./build.sh p1 # Una pràctica en concret
+./build.sh    # Totes les pràctiques
 ```
 
-**Alternativa:** Si es té Docker instal·lat, executar `./build.sh`, un script
-que utilitzarà un contenidor (el del Dockerifle) per generar tots els
-fitxers i deixar-los a `build/`. En aquest mètode, no cal baixar-se res ni
-preocupar-se per tenir versions diferents.
-
-També es pot fer `./build.sh p1` per fer build de `p1.tex` a `p1.pdf`.
+Els PDFs es generaran a `/build`.
 
 ## Llicència i contribucions
 
