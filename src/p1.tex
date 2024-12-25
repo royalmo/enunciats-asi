@@ -1,0 +1,230 @@
+\documentclass{practicaitic}
+\usepackage{lst-vhdl, lst-shell}
+\usepackage{parskip}
+
+\numpract{1}
+\title{Pràctica 1: Posada en marxa d'un VPS}
+
+\assignatura{Aplicacions i Serveis sobre Internet}
+\autor{Eric Roy Almonacid \and Francisco del Águila López}
+
+\begin{document}
+
+\section{Introducció}
+
+Aquesta pràctica és l'inici d'un seguit de pràctiques seqüencials, on
+l'objectiu final és disposar d'un servidor obert a internet i el coneixement
+necessari per poder-hi configurar gairebé tots els serveis \textit{self-hosted}
+que hi ha disponibles al mercat.
+
+\subsection{Objectius}
+
+Al finalitzar aquesta pràctica, l'estudiantat haurà:
+\begin{enumerate}
+  \item Creat un servidor en local o amb un proveïdor de serveis al núvol.
+  \item Configurat l'adreçament IPv4 i IPv6 al servidor.
+  \item Creats diferents usuaris al servidor amb grups diferents.
+  \item Configurat SSH per clau privada.
+\end{enumerate}
+
+\subsection{Condicions}
+
+Aqeusta pràctica està cal·librada per ésser treballada en equips de 2 persones,
+i té una durada de 2 setmanes.
+
+\subsection{Lliuraments}
+
+S'haurà de realitzar una entrega a Atenea i mantenir operatiu el servidor creat
+fins que la pràctica sigui avaluada. El format de la entrega està detallat a
+l'apartat \ref{sec:entrega}.
+
+\section{El concepte de VPS}
+
+Hi ha diverses alternatives per poder disposar dels seus propis serveis a
+Internet:
+
+\begin{itemize}
+  \item Muntar un servidor a casa seva: és una alternativa més econòmica, però
+  requereix tenir un ordinador sempre connectat a l'encaminador i una IP pública.
+  Actualment molts proveïdors d'internet col·loquen els seus usuaris darrere un
+  \textit{Carrier-Grade NAT} (CG-NAT), que els impedeix configurar la
+  redirecció de ports de la seva adreça IP pública, ja que és compartida amb la
+  resta d'usuaris.
+  \item Llogar recursos a tercers: la alternativa més senzilla, ja no ens hem
+  de preocupar de tota la part del maquinari.
+\end{itemize}
+
+Tanmateix, llogar un servidor sencer no és sempre necessari: sovint amb pocs
+recursos ja es pot desplegar serveis com \textit{Moodle}, \textit{Wordpress},
+o fins i tot un servidor de \textit{Minecraft}.
+Així doncs, per abaratir els preus es poden crear diferents màquines virtuals
+en un servidor i llogar cadascuna per separat.
+
+Un \textit{Virtual Private Server} (VPS) és una d'aquestes màquines, amb una
+adreça única assignada per fer-la accessible des d'internet. En aquesta
+pràctica llogarem i configurarem el nostre primer VPS. Veureu que, a efectes pràctics,
+no sabrem ni que estem treballant sobre una màquina virtual.
+
+\section{Desenvolupament de la pràctica}
+
+La majoria de proveïdors
+ofereixen serveis a preus molt baixos i amb períodes de prova molt amplis, però
+si ho preferiu podeu realitzar les pràctiques amb un ordinador de casa vostra.
+
+En aquests casos haureu de tenir present els requeriments d'adreça IP i
+\textit{uptime} (haurà d'estar sempre accessible), i haureu d'adaptar els
+enunciats pel vostre cas particular.
+
+\subsection{Creació del VPS}
+
+TODO AFEGIR CAPTURES
+
+Per l'enunciat d'aquesta pràctica hem decidit utilitzar com a exemple el
+proveïdor \textit{Hetzner}, però qualsevol que ofereixi un VPS amb IPv4 i
+IPv6 públiques haurien de servir (OVH, DigitalOcean, ...).
+
+En el cas de \textit{Hetzner}, es poden compartir enllaços d'afiliat o trobar
+codis de descompte a la seva pàgina web per gaudir de 3 mesos de prova. Per
+exemple, a la part dreta de qualsevol article de community.hetzner.com hi ha un
+codi de descompte.
+
+TASCA 1: Creeu-vos un compte i verifiqueu-lo introduint un mètode de pagament.
+
+TASCA 2: Creeu un nou projecte, i llavors un nou VPS. Com a imatge base us
+recomanem utilitzar la darrera versió de Debian. Agafeu l'arquitectura i
+recursos més econòmics, i la majoria d'opcions poden ser per defecte.
+
+\subsubsection{Accedir al servidor}
+
+En la majoria de VPS podreu preconfigurar bastantes coses (usuaris, servei SSH),
+però partirem des de zero. Un cop creat el servidor accedirem a la consola,
+on veurem que només hi ha un usuari inicial (root).
+
+TASCA 3: Accedir a la consola del servidor i comproveu que podeu interactuar amb
+ell.
+
+TODO: parlar de firewall de hetzner
+
+TASCA 4: Configureu, si podeu, el tallafocs del vostre proveïdor per acceptar només
+els paquets ICMP (ping), i de SSH. Si l'activeu, haureu de pensar més endavant en
+afegir excepcions pels servidors que anirem creant.
+
+\subsection{Creació d'usuaris}
+
+Al tenir un servidor obert a Internet és crucial protegir-lo des d'un primer
+moment. El primer pas que farem serà crear usuaris per no treballar sempre
+amb \texttt{root}.
+
+TASCA 5: Creeu tres nous usuaris al servidor:
+\begin{itemize}
+  \item Un per cada integrant del grup. Per exemple \texttt{eric} i \texttt{paco}.
+  \item Un altre anomenat \texttt{profe} amb el que els professors es connectaran
+  per revisar el servidor.
+\end{itemize}
+Afegiu al grup \texttt{sudo} als tres usuaris, i creeu una contrasenya per
+cada un d'ells.
+
+\subsection{Configuració de SSH}
+
+Com us podeu imaginar, no és molt pràctic treballar al servidor des de la
+interfície del navegador. SSH o \textit{Secure SHell} és un protocol que permet
+accedir a la consola d'un ordinador remotament. Anem a configurar-lo pel nostre
+servidor. Ncessitareu el paquet \texttt{openssh-server} al servidor, i \texttt{ssh}
+al vostre ordinador (tot i que segurament ja el teniu instal·lat).
+
+TASCA 6: Configureu SSH en el vostre servidor per no acceptar login amb
+l'usuari root i engegueu el servidor.
+
+Fent \texttt{ssh -p port usuari@ip\_del\_servidor} des del vostre ordinador 
+hauríeu de poder connectar-vos al servidor remotament. El port es pot ometre si
+és el per defecte (22), i l'usuari es pot ometre si és el mateix que el del
+vostre ordinador.
+
+\subsubsection{Accés amb claus asimètriques}
+
+Actualment, l'únic que protegeix el vostre servidor d'un atac és la contrasenya
+del vostre usuari. Això és vulnerable a atacs de força bruta. SSH ofereix com a
+alternativa l'autentificació per claus asimètriques.
+
+TASCA 7: Genereu un parell de claus asimètriques. Cada integrant del grup ha de
+generar les seves.
+
+TASCA 8: Copieu la clau pública de cada integrant al fitxer
+\texttt{~/.ssh/authorized\_keys}. Cada usuari té un fitxer diferent.
+
+TASCA 9: Deshabiliteu les connexions SSH per contrasenya i reinicieu openssh.
+Ara no hauríeu de poder connectar-vos des de l'ordinador d'un altre company
+de classe (que no té la vostra clau privada), però sí des del vostre.
+
+Finalment, es donarà accés al servidor als professors. A Atenea trobareu penjada
+una clau pública que haureu d'afegir a l'usuari \texttt{profe}. Els professors
+utilitzaran aquest accés només per avaluar les pràctiques, i no modificaran
+l'estat del servidor.
+
+\section{Entrega}
+\label{sec:entrega}
+
+S'ha d'entregar un fitxer de text (\texttt{P1\_GX.txt}, on X és el número o 
+lletra del grup) amb el següent format:
+
+\begin{verbatim}
+Grup: GX
+IPv4: 128.140.55.126
+IPv6: 2a01:4f8:c013:7f5::1
+Contrasenya usuari profe: Lkv5YYyON8X
+Port SSH: 22
+
+(Comentaris referents a l'entrega, si s'escau)
+\end{verbatim}
+
+Evidentment, heu de posar els valors del vostre servidor i grup. Si feu
+servir el port SSH per defecte podeu ometre la darrera línia.
+
+Al servidor, creeu el directori \texttt{/entregues} a l'arrel, i a dins un
+directori \texttt{/entregues/p1}. Allà hi heu de deixar els scripts i/o manuals
+(el que cregueu convenient) que us farien falta si mai haguéssiu de repetir
+aquesta pràctica.
+
+Per exemple, podríeu indicar:
+\begin{itemize}
+  \item El proveïdor que heu utilitzat, els seus preus i ofertes, i el perquè l'heu escollit.
+  \item Solucions a problemes que us heu trobat, i si cal, enllaços a fòrums o manuals.
+  \item Comandes que heu utilitzat amb una petita explicació de què fan (1 línia sol ser suficient).
+  \item Altres coses que hagueu fet (per exemple, configurar el tallafocs de \textit{Hetzner}).
+\end{itemize}
+
+No ha de ser extens; aquests documents us serviran a vosaltres si mai heu de
+crear un servidor nou.
+
+\section{Qualificació}
+
+Aquesta pràctica s'avaluarà de la següent manera. La puntuació màxima és 100.
+
+\begin{center}
+  \begin{tabular}{ll}
+  \hline
+  Concepte & Rang \\ \hline
+  Fitxer de l'entrega (\texttt{P1\_GX.txt}) amb format correcte & $[-20, 0]$ \\
+  Es pot fer ping al servidor per IPv4 & $[0, 5]$ \\
+  Es pot fer ping al servidor per IPv6 & $[0, 5]$ \\
+  SSH amb contrasenya o amb root habilitat & $[-10, 0]$ \\
+  El servidor té usuaris per cada integrant i usuari \texttt{profe} & $[0, 10]$ \\
+  Es pot fer SSH al servidor amb la clau privada de \texttt{profe} & $[0, 40]$ \\
+  L'usuari \texttt{profe} no pot fer \texttt{sudo} & $[-10,0]$ \\
+  Qualitat dels scripts/tutorials de \texttt{/entregues/p1} & $[0,40]$ \\
+  El servidor presenta problemes de seguretat greus & $[-10,0]$ \\
+  \hline
+  \end{tabular}
+\end{center}
+
+Nota: si el vostre proveïdor no us permet tenir una adreça IPv6 pública
+indiqueu-ho als comentaris del fitxer de la entrega. En aquest cas, l'apartat
+sobre IPv4 valdrà el doble i el de IPv6 queda a zero.
+
+Tingueu present que si algun element de la taula anterior no es pot avaluar
+(per exemple, al no poder fer \texttt{sudo} no es pot llegir els continguts de \texttt{/entregues/p1})
+aquest es qualificarà amb la nota més baixa.
+
+Si es detecta algun tipus de frau en l'entrega aquesta rebrà una puntuació de zero.
+
+\end{document}
