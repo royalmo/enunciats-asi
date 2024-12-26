@@ -17,4 +17,5 @@ RUN mkdir -p /output
 WORKDIR /
 ENV MAIN_TEX=main
 
-CMD ["/bin/bash", "-c", "cp -r /input/* /output_tmp && cd /output_tmp && pdflatex -halt-on-error $MAIN_TEX.tex && mv $MAIN_TEX.pdf /output"]
+# Compiling LaTeX twice to reference things: https://tex.stackexchange.com/a/301109
+CMD ["/bin/bash", "-c", "cp -r /input/* /output_tmp && cd /output_tmp && pdflatex -halt-on-error $MAIN_TEX.tex && pdflatex -halt-on-error $MAIN_TEX.tex && mv $MAIN_TEX.pdf /output"]
