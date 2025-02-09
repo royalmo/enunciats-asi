@@ -1,5 +1,6 @@
 \documentclass{practicaitic}
 \usepackage{parskip}
+\usepackage{graphicx}
 
 \numpract{1}
 \title{Pràctica 1: Posada en marxa d'un VPS}
@@ -22,8 +23,9 @@ Al finalitzar aquesta pràctica, l'estudiantat haurà:
 \begin{enumerate}
   \item Creat un servidor en local o amb un proveïdor de serveis al núvol.
   \item Configurat l'adreçament IPv4 i IPv6 al servidor.
-  \item Creats diferents usuaris al servidor amb grups diferents.
+  \item Creat diferents usuaris al servidor amb grups diferents.
   \item Configurat SSH per clau privada.
+  \item Connectat el servidor al VPN de l'escola.
 \end{enumerate}
 
 \subsection{Condicions}
@@ -76,22 +78,38 @@ enunciats pel vostre cas particular.
 
 \subsection{Creació del VPS}
 
-TODO AFEGIR CAPTURES
-
 Per l'enunciat d'aquesta pràctica hem decidit utilitzar com a exemple el
-proveïdor \textit{Hetzner}, però qualsevol que ofereixi un VPS amb IPv4 i
+proveïdor \textit{Hetzner} per la seva simplicitat i preu. Tanmateix,
+qualsevol que ofereixi un VPS amb IPv4 i
 IPv6 públiques haurien de servir (OVH, DigitalOcean, ...).
 
 En el cas de \textit{Hetzner}, es poden compartir enllaços d'afiliat o trobar
 codis de descompte a la seva pàgina web per gaudir de 3 mesos de prova. Per
-exemple, a la part dreta de qualsevol article de community.hetzner.com hi ha un
+exemple, a la part dreta de qualsevol article de \url{https://community.hetzner.com} hi ha un
 codi de descompte.
 
-TASCA 1: Creeu-vos un compte i verifiqueu-lo introduint un mètode de pagament.
+\begin{quote}
+TASCA 1: Creeu-vos un compte a \url{https://accounts.hetzner.com/signUp} i
+verifiqueu-lo introduint un mètode de pagament. Si utilitzeu un altre proveïdor,
+indiqueu-ho en l'entrega.
+\end{quote}
 
-TASCA 2: Creeu un nou projecte, i llavors un nou VPS. Com a imatge base us
+\begin{quote}
+TASCA 2: Aneu a \url{https://console.hetzner.cloud} i creeu un nou projecte, i
+llavors un nou servidor a dintre d'aquest. Com a imatge base us
 recomanem utilitzar la darrera versió de Debian. Agafeu l'arquitectura i
 recursos més econòmics, i la majoria d'opcions poden ser per defecte.
+Anoteu-vos l'adreça IPv4 i IPv6 del servidor.
+\end{quote}
+
+Un cop en marxa el servidor, hauríeu de veure quelcom similar a la Figura \ref{fig:h1}.
+
+\begin{figure}[h]
+  \includegraphics[width=0.9\linewidth]{assets/hetzner1.png}
+  \centering
+  \label{fig:h1}
+  \caption{Tauler de control del servidor a \textit{Hetzner}.}
+\end{figure}
 
 \subsubsection{Accedir al servidor}
 
@@ -99,14 +117,48 @@ En la majoria de VPS podreu preconfigurar bastantes coses (usuaris, servei SSH),
 però partirem des de zero. Un cop creat el servidor accedirem a la consola,
 on veurem que només hi ha un usuari inicial (root).
 
-TASCA 3: Accedir a la consola del servidor i comproveu que podeu interactuar amb
-ell.
+\begin{quote}
+TASCA 3: Accediu a la consola del servidor i comproveu que podeu interactuar amb
+ell. Des de la Figura \ref{fig:h1} es pot accedir a la consola a partir de la
+icona \verb|[>_]|, a la dreta del tot. Si desconeixeu la contrasenya de
+l'usuari \verb|root| la podeu tornar a generar a la pestanya de \textit{Rescue}.
+\end{quote}
 
-TODO: parlar de firewall de hetzner
+\subsubsection{Configuració de xarxa}
 
-TASCA 4: Configureu, si podeu, el tallafocs del vostre proveïdor per acceptar només
-els paquets ICMP (ping), i de SSH. Si l'activeu, haureu de pensar més endavant en
+Per defecte, si executeu \texttt{ip a} al servidor hauríeu de poder veure
+que a l'interfície corresponent ja hi té configurada l'adreça, i gràcies a
+això el VPS es pot connectar a internet. Tanmateix, alguns proveïdors no configuren
+l'adreçament IPv6. En el cas de \textit{Hetzner}, aquest assigna un rang de IPv6
+per cada VPS. Haureu d'escollir una adreça d'aquest rang i assignar-la a la màquina.
+
+\begin{quote}
+TASCA 4: A partir dels coneixements adquirits a Xarxes de Computadors, assegureu-vos
+que el VPS té adreçament IPv4 i IPv6. Podeu utilitzar l'eina \texttt{ping} per comprovar
+que els paquets arriben al servidor.
+\end{quote}
+
+\subsubsection{Configuració del tallafocs}
+
+La majoria de proveïdors de VPS ofereixen la possibilitat de desplegar un
+tallafocs o \textit{firewall} a fora del servidor. Al no poder modificar el tallafocs
+des de l'interior del servidor, això suposa una barrera addicional en la seguretat
+de la màquina. \textit{Hetzner} ofereix aquesta possibilitat: es pot configurar
+a partir de la pestanya \textit{Firewall} de la Figura \ref{fig:h1}.
+
+\begin{quote}
+TASCA 5: Configureu, si podeu, el tallafocs del vostre proveïdor per acceptar només
+els paquets ICMP (ping), i de SSH (port 22/tcp). Si l'activeu, haureu de pensar més endavant en
 afegir excepcions pels servidors que anirem creant.
+
+Podeu comprovar el funcionament del tallafocs intentant-vos connectar al
+servidor al port 22 i a un altre port mitjançant \textit{netcat}:
+\begin{verbatim}
+  nc <ip_del_servidor> <port> -vv
+\end{verbatim}
+Observeu el correcte funcionament del tallafocs. Proveu també de fer
+\texttt{ping} al servidor.
+\end{quote}
 
 \subsection{Creació d'usuaris}
 
@@ -114,7 +166,17 @@ Al tenir un servidor obert a Internet és crucial protegir-lo des d'un primer
 moment. El primer pas que farem serà crear usuaris per no treballar sempre
 amb \texttt{root}.
 
-TASCA 5: Creeu tres nous usuaris al servidor:
+Recordeu que per afegir un usuari \texttt{pepito} que, a part d'estar dins del
+grup \texttt{pepito}, també estigui al grup \texttt{epsem}, la comanda a executar
+seria la següent (amb la darrera comanda crearíem una contrasenya per l'usuari):
+\begin{verbatim}
+adduser pepito
+usermod -aG epsem pepito
+passwd pepito
+\end{verbatim}
+
+\begin{quote}
+TASCA 6: Creeu tres nous usuaris al servidor:
 \begin{itemize}
   \item Un per cada integrant del grup. Per exemple \texttt{eric} i \texttt{paco}.
   \item Un altre anomenat \texttt{profe} amb el que els professors es connectaran
@@ -122,6 +184,7 @@ TASCA 5: Creeu tres nous usuaris al servidor:
 \end{itemize}
 Afegiu al grup \texttt{sudo} als tres usuaris, i creeu una contrasenya per
 cada un d'ells.
+\end{quote}
 
 \subsection{Configuració de SSH}
 
@@ -129,15 +192,29 @@ Com us podeu imaginar, no és molt pràctic treballar al servidor des de la
 interfície del navegador. SSH o \textit{Secure SHell} és un protocol que permet
 accedir a la consola d'un ordinador remotament. Anem a configurar-lo pel nostre
 servidor. Ncessitareu el paquet \texttt{openssh-server} al servidor, i \texttt{ssh}
-al vostre ordinador (tot i que segurament ja el teniu instal·lat).
+al vostre ordinador (tot i que segurament ja els teniu instal·lats).
 
-TASCA 6: Configureu SSH en el vostre servidor per no acceptar login amb
-l'usuari root i engegueu el servidor.
+\begin{quote}
+TASCA 7: Executeu \texttt{systemctl start ssh} per engegar el servidor \textit{ssh}.
+\end{quote}
 
 Fent \texttt{ssh -p port usuari@ip\_del\_servidor} des del vostre ordinador 
 hauríeu de poder connectar-vos al servidor remotament. El port es pot ometre si
 és el per defecte (22), i l'usuari es pot ometre si és el mateix que el del
 vostre ordinador.
+
+\begin{quote}
+TASCA 8: Podeu connectar-vos amb l'usuari \textit{root} al servidor mitjançant SSH?
+Això no és una bona pràctica de seguretat. Modifiqueu el fitxer \texttt{/etc/ssh/sshd\_config},
+i canvieu \texttt{PermitRootLogin} de \verb|yes| a \verb|no|.
+
+Guardeu el fitxer i
+reinicieu el servei de SSH mitjançant \texttt{systemctl restart sshd}. Comproveu que
+ja no podeu connectar-vos amb \texttt{root}.
+
+Aprofiteu per fer una ullada al fitxer de configuració. Potser us pot interessar
+fer algun canvi més.
+\end{quote}
 
 \subsubsection{Accés amb claus asimètriques}
 
@@ -145,22 +222,65 @@ Actualment, l'únic que protegeix el vostre servidor d'un atac és la contraseny
 del vostre usuari. Això és vulnerable a atacs de força bruta. SSH ofereix com a
 alternativa l'autentificació per claus asimètriques.
 
-TASCA 7: Genereu un parell de claus asimètriques. Cada integrant del grup ha de
-generar les seves.
+\begin{quote}
+TASCA 9: Genereu un parell de claus asimètriques. Cada integrant del grup ha de
+generar les seves. Us recomanem utilitzar RSA de 4096 bits.
 
-TASCA 8: Copieu la clau pública de cada integrant al fitxer
-\texttt{~/.ssh/authorized\_keys}. Cada usuari té un fitxer diferent.
+Podeu consultar el manual de \texttt{ssh-keygen} a
+\url{https://www.ssh.com/academy/ssh/keygen}.
+\end{quote}
 
-TASCA 9: Deshabiliteu les connexions SSH per contrasenya i reinicieu openssh.
-Ara no hauríeu de poder connectar-vos des de l'ordinador d'un altre company
-de classe (que no té la vostra clau privada), però sí des del vostre.
-
-Finalment, es donarà accés al servidor als professors. A Atenea trobareu penjada
+Es donarà accés al servidor als professors. A Atenea trobareu penjada
 una clau pública que haureu d'afegir a l'usuari \texttt{profe}. Els professors
 utilitzaran aquest accés només per avaluar les pràctiques, i no modificaran
 l'estat del servidor.
 
+El següent pas
+és posar les 3 claus públiques al servidor.
+
+\begin{quote}
+TASCA 10: Copieu la clau pública de cada integrant al fitxer
+\texttt{/home/<USUARI>/.ssh/authorized\_keys}. Cada usuari té un fitxer diferent,
+i pot tenir diferents claus (1 per línia), representant diferents dispositius.
+\end{quote}
+
+Ara només faltarà deshabilitar les connexions per contrasenya. Abans, però, us
+recomanem comprovar que us podeu connectar sense posar contrasenya. Si podeu,
+significa que SSH ha reconegut la vostra clau privada i podeu seguir sense
+tenir por de quedar-vos sense accés al servidor.
+
+\begin{quote}
+TASCA 11: Deshabiliteu les connexions SSH per contrasenya i reinicieu openssh.
+Haureu de modificar el mateix fitxer que abans.
+
+Ara no hauríeu de poder connectar-vos des de l'ordinador d'un altre company
+de classe (que no té la vostra clau privada), però sí des del vostre.
+\end{quote}
+
+\section{Connexió al VPN de l'escola}
+
+Per poder connectar-se fàcilment als servidors de la resta de grups i poder seguir
+correctament les pràctiques posteriors farà falta connectar el VPS al servidor
+OpenVPN creat expressement per a aquesta assignatura.
+
+\begin{quote}
+  TASCA 12: Connecteu-vos al servidor VPN de l'escola amb el vostre servidor.
+  Assigneu la IP \texttt{172.20.ng.2} a la interfície que creareu, on $ng$ és
+  el vostre número de grup.
+
+  Per realitzar aquesta tasca us serà útil llegir l'apartat 5.1 de l'enunciat de
+  la versió anterior d'aquesta pràctica, disponible a l'OpenCourseWare.
+\end{quote}
+
+Finalment, podeu comprovar que us heu pogut connectar al VPN correctament
+connectant-vos a la VPN amb el vostre ordinador personal (assigneu una alta
+adreça IP, per exemple \texttt{172.20.ng.3}) i proveu de connectar-vos al servidor
+utilitzant l'adreça IP \texttt{172.20.ng.2} enlloc de l'adreça pública.
+
 \section{Avaluació}
+
+Aquest apartat detalla com s'ha d'entregar i avaluar la pràctica.
+
 \subsection{Entrega}
 \label{sec:entrega}
 
@@ -196,6 +316,7 @@ Per exemple, podríeu indicar:
 No ha de ser extens; aquests documents us serviran a vosaltres si mai heu de
 crear un servidor nou.
 
+\newpage % Sinó queda el títol i una línia sola
 \subsection{Qualificació}
 
 Aquesta pràctica s'avaluarà de la següent manera. La puntuació màxima és 100.
@@ -209,8 +330,9 @@ Aquesta pràctica s'avaluarà de la següent manera. La puntuació màxima és 1
   Es pot fer ping al servidor per IPv6 & $[0, 5]$ \\
   SSH amb contrasenya o amb root habilitat & $[-10, 0]$ \\
   El servidor té usuaris per cada integrant i usuari \texttt{profe} & $[0, 10]$ \\
-  Es pot fer SSH al servidor amb la clau privada de \texttt{profe} & $[0, 40]$ \\
+  Es pot fer SSH al servidor amb la clau privada de \texttt{profe} & $[0, 20]$ \\
   L'usuari \texttt{profe} no pot fer \texttt{sudo} & $[-10,0]$ \\
+  El servidor està connectat al VPN de l'escola & $[0, 20]$ \\
   Qualitat dels scripts/tutorials de \texttt{/entregues/p1} & $[0,40]$ \\
   El servidor presenta problemes de seguretat greus & $[-10,0]$ \\
   \hline
