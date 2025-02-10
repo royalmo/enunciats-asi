@@ -1,0 +1,232 @@
+\documentclass{practicaitic}
+\usepackage{parskip}
+
+\numpract{3}
+\title{Pràctica 3: Servei de noms (DNS)}
+
+\assignatura{Aplicacions i Serveis sobre Internet}
+\autor{Eric Roy Almonacid \and Francisco del Águila López}
+
+\begin{document}
+
+\section{Introducció}
+
+Per poder realitzar aquesta pràctica és indispensable haver completat la
+pràctica 1, donat que treballarem sobre el VPS creat anteriorment.
+
+\subsection{Objectius}
+
+Al finalitzar aquesta pràctica, l'estudiantat haurà:
+\begin{enumerate}
+  \item Entès el funcionament de la resolució de noms de domini.
+  \item Adquirit un domini o subdomini, en el qual en té autoritat.
+  \item Creat registres al domini utilitzant un servei de tercers.
+  \item Entès el funcionament i configurat DNSSEC al domini.
+  \item Entès i configurat DDNS utilitzant serveis de tercers.
+\end{enumerate}
+
+\subsection{Condicions}
+
+Aqeusta pràctica està cal·librada per ésser treballada en equips de 2 persones,
+i té una durada de 1 a 2 setmanes.
+
+\subsection{Lliuraments}
+
+S'haurà de realitzar una entrega a Atenea i mantenir operatiu el servidor 
+i domini creats fins que la pràctica sigui avaluada. El format de la entrega està detallat a
+l'apartat \ref{sec:entrega}.
+
+\section{El Servei de Noms de Domini}
+
+El Servei de noms de domini o \textit{Domain Name Server} (DNS) va ser introduït
+l'any 1983 amb dues finalitats:
+
+\begin{itemize}
+  \item Poder resoldre un nom de domini a una adreça IP, per evitar haver de
+  memoritzar-la.
+  \item Establir l'arbre de noms: definir l'estructura jeràrquica de noms distribuida
+  en zones d'autoritat. Per exemple, qualsevol domini que acabi amb \texttt{upc.edu}
+  significarà que pertany a la UPC. Qualsevol domini que acabi amb \texttt{epsem.upc.edu}
+  significarà que pertany a l'escola de Manresa.
+\end{itemize}
+
+Així doncs, un servidor de DNS es pot distingir segons la funció que realitza:
+
+\begin{itemize}
+  \item Autoritatiu: (\textit{authoritative name server}): forma part de l'arbre
+    de noms de domini, i defineix
+    els continguts de la zona en la que hi té autoritat. Pot delegar a altres
+    servidors DNS sub-zones d'autoritat.
+
+    N'hi ha de dos tipus: primaris i secundaris. Els secundaris tenen la mateixa
+    informació que els primaris i es fan servir per reduncància.
+  \item Local: (\textit{local name server}): aquest servidor consulta iterativament
+    als servidors autoritatius fins a obtenir el resultat de la consulta. A més, pot
+    guardar en \textit{caché} les respostes de les consultes.
+\end{itemize}
+
+Tot i que és possible fer-ho, en general no hi ha servidors autoritatius
+i locals alhora. Si es fa una consulta iterativa a un servidor autoritatiu aquest
+no cercarà la resposta.
+
+En aquesta pràctica configurarem un servidor autoritatiu de tercers. Si teniu
+interès en desplegar el vostre propi servidor de noms us recomanem utilitzar
+el servei \texttt{bind}.
+
+\subsection{Dominis de primer nivell}
+
+Els dominis de primer nivell o \textit{Top-Level Domains} (TLD) son els dominis
+directament descendents de l'arrel o \textit{root}. Inicialment només n'hi havien
+6: \textit{.gov}, \textit{.mil}, \textit{.net}, \textit{.edu}, \textit{.org} i \textit{.com}.
+
+Amb el creixement d'Internet, aquest va arribar a territoris estrangers, i es va acabar
+assignant un TLD a cadascun d'ells: \textit{.es}, \textit{.pt}, etc. Actualment,
+l'ICANN crea TLDs per molts col·lectius diferents, i delega la seva
+autoritat a una entitat. En el cas del TLD \textit{.cat}, aquest és gestionat des
+dels seus inicis per la Fundació .cat : \url{https://fundació.cat}.
+
+Quan es parla col·loquialment d'\textit{adquirir un domini}, es refereix
+a arribar a un tracte amb una entitat que disposa d'un TLD perquè aquesta
+ens reservi i delegui l'autoritat d'un subdomini. Cada TLD pot posar les
+condicions (preu, finalitat, idioma dels continguts) que desitja. En el cas
+d'un domini .cat, es demana que el contingut estigui en català.
+
+Per facilitar la tasca de "llogar" dominis s'ha creat el concepte de
+registrador de dominis o \textit{registrar} en anglès. Cada TLD escull quins
+registradors poden assignar sub-dominis en nom seu, i sota quines condicions.
+En el cas del domini .cat, podeu consultar els registradors disponibles a
+\url{https://domini.cat/comparativa-de-preus/}.
+
+\subsection{Registrar un domini}
+
+La primera tasca d'aquesta pràctica consistirà en regsitrar un domini
+amb un registrador. Qualsevol registrador és igual de vàlid, però si busqueu
+una alternativa econòmica us recomanem \url{https://dinahosting.com} pels
+dominis .cat i \url{https://cloudflare.com} per la resta (\textit{.com}, \textit{.net}, \textit{.es}, ...).
+
+Existeixen alternatives per si no voleu pagar per un domini. Hi ha serveis com
+\url{https://dynu.com} que et cedeixen gratüitament un domini de l'estil
+\texttt{domini.dynu.com}. Utilitzar subdominis comporta algunes conseqüències,
+però no tenen cap impacte en les pràctiques d'aquesta assignatura.
+
+\begin{quote}
+  TASCA 1: Adquiriu un domini o subdomini.
+\end{quote}
+
+\subsection{Gestionar un domini}
+
+Cada registrador té la seva interfície, però gairebé tots permeten gestionar
+els registres DNS. En cas que no ho permeti o que es vulgui utilitzar un altre
+servidor de noms de domini (ja sigui propi o un altre servei), un registrador
+sempre ha d'oferir la possiblitat de canviar les entrades \texttt{NS}. D'aquesta
+manera és possible gestionar un domini .cat amb \textit{cloudflare}.
+
+Un registrador també està obligat a oferir la possiblitat de traspassar el domini
+a un altre registrador. És un procés lent, però que garanteix que en cap moment el
+domini estarà "alliberat", és a dir, que cap persona externa el podrà adquirir.
+
+\begin{quote}
+  TASCA 2: Creeu en el gestor del registrador un registre \texttt{A} que relacioni
+  el domini adquirit (o un subdomini d'aquest) a l'adreça IPv4 del VPS de la
+  pràctica 1. Creeu un registre \texttt{AAAA} amb la mateixa finalitat que l'anterior
+  però per l'adreça IPv6.
+
+  Comproveu el funcionament de la tasca anterior utilitzant les eines \texttt{ping}
+  o \texttt{dig} en el vostre ordinador.
+\end{quote}
+
+\subsection{DNSSEC}
+
+
+
+Explicar:
+\begin{itemize}
+  \item DNS, zones d'autoritat
+  \item TLD, subdomini
+  \item Qui assigna TLD i com es gestionen aquests
+  \item serveis de tercers
+  \item Seguretat: DNSSEC
+  \item DDNS per IPs variants, i altres aternatives
+  \item registres PTR
+\end{itemize}
+
+\section{Desenvolupament de la pràctica}
+
+Detallar tasques per:
+\begin{itemize}
+  %\item Adquirir un domini (proposar Cloudflare o dinahosting si és .cat),
+  %o bé un subdomini amb serveis de tercers com dynu.com .
+  %\item Posar registre A i AAAA d'un subdomini al VPS anterior.
+  \item Habilitar DNSSEC i comprovar que funciona.
+  \item Utilitzar dynu per posar DDNS al portàtil via cronjob. Així sabrem
+  sempre a on està el nostre portàtil.
+  \item Si el proveïdor ho permet, posar registre PTR.
+  \item Canviar el hostname del servidor.
+\end{itemize}
+
+\section{Avaluació}
+\subsection{Entrega}
+\label{sec:entrega}
+
+S'ha d'entregar un fitxer de text (\texttt{P3\_GX.txt}, on X és el número o 
+lletra del grup) amb el següent format:
+
+\begin{verbatim}
+Grup: GX
+Domini adquirit: asi.itic.cat
+Servidor: srv1.asi.itic.cat
+Contrasenya usuari profe: Lkv5YYyON8X
+Port SSH: 22
+
+(Comentaris referents a l'entrega, si s'escau)
+\end{verbatim}
+
+La majoria de dades son referents a la pràctica 1. Es demana
+que les torneu a escriure, així teniu la possibiltat de canviar-les.
+Fixeu-vos també que no cal introduir adreces IP, ja que es poden
+obtenir a partir dels dominis.
+
+Al servidor, creeu el directori \texttt{/entregues} a l'arrel, i a dins un
+directori \texttt{/entregues/p3}. Allà hi heu de deixar els scripts i/o manuals
+(el que cregueu convenient) que us farien falta si mai haguéssiu de repetir
+aquesta pràctica.
+
+Per exemple, podríeu indicar:
+\begin{itemize}
+  \item El proveïdor que heu utilitzat, els seus preus i ofertes, i el perquè l'heu escollit.
+  \item Solucions a problemes que us heu trobat, i si cal, enllaços a fòrums o manuals.
+  \item Comandes que heu utilitzat amb una petita explicació de què fan (1 línia sol ser suficient).
+  \item Altres coses que hagueu fet (per exemple, configurar el tallafocs de \textit{Hetzner}).
+\end{itemize}
+
+No ha de ser extens; aquests documents us serviran a vosaltres si mai heu de
+crear un nou domini.
+
+\subsection{Qualificació}
+
+Aquesta pràctica s'avaluarà de la següent manera. La puntuació màxima és 100.
+
+\begin{center}%{|p{1cm}|p{3cm}|}
+  \begin{tabular}{p{0.7\linewidth} l}
+  \hline
+  Concepte & Rang \\ \hline
+  Fitxer de l'entrega (\texttt{P3\_GX.txt}) amb format correcte & $[-20, 0]$ \\
+  Es pot resoldre el nom del servidor per IPv4 i IPv6 & $[0, 20]$ \\
+  El hostname del servidor és el del domini & $[0, 10]$ \\
+  La resolució inversa de les adreces IPv4 i IPv6 del servidor permeten obtenir el domini (FQDN) & $[0, 20]$ \\
+  Qualitat dels scripts/tutorials de \texttt{/entregues/p3} & $[0,50]$ \\
+  El servidor presenta problemes de seguretat greus & $[-10,0]$ \\
+  \hline
+  \end{tabular}
+\end{center}
+
+Nota: si el vostre proveïdor no us permet tenir una adreça IPv6 pública o
+modificar els registres de la resolució inversa indiqueu-ho al fitxer de la
+entrega.
+
+Tingueu present que si algun element de la taula anterior no es pot avaluar
+aquest es qualificarà amb la nota més baixa.
+
+Si es detecta algun tipus de frau en l'entrega aquesta rebrà una puntuació de zero.
+
+\end{document}
