@@ -146,11 +146,15 @@ que els paquets arriben al servidor.
 % Hi ha possibilitat de crear tallafocs a dins o està bloquejat? En
 % realitat és un VPS tipus LXC o Docker? on no es pot tocar el kernel?
 
-La majoria de proveïdors de VPS ofereixen la possibilitat de desplegar un
-tallafocs o \textit{firewall} a fora del servidor. Al no poder modificar el tallafocs
-des de l'interior del servidor, això suposa una barrera addicional en la seguretat
-de la màquina. \textit{Hetzner} ofereix aquesta possibilitat: es pot configurar
-a partir de la pestanya \textit{Firewall} de la Figura \ref{fig:h1}.
+La majoria de proveïdors de VPS ofereixen la possibilitat de desplegar
+un tallafocs o \textit{firewall} a fora del servidor. En general, en
+funció del tipus de virtualització que ofereixi el proveïdor de VPS,
+també és possible definir un tallafocs a dins del servidor. La gestió
+del \textit{firewall} del proveïdor no es pot fer des de l'interior
+del VPS. Si està disponible, és recomanable habilitar el tallafocs del
+proveïdor. \textit{Hetzner} ofereix aquesta possibilitat: es pot
+configurar a partir de la pestanya \textit{Firewall} de la Figura
+\ref{fig:h1}.
 
 \begin{previ}
 Configureu, si podeu, el tallafocs del vostre proveïdor per acceptar només
