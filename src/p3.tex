@@ -1,5 +1,9 @@
 \documentclass{practicaitic}
 \usepackage{parskip}
+\usepackage{graphicx}
+
+\usepackage[onelevel]{exercici}
+%\usepackage[utf8]{inputenc}
 
 \numpract{3}
 \title{Pràctica 3: Servei de noms (DNS)}
@@ -109,9 +113,9 @@ Existeixen alternatives per si no voleu pagar per un domini. Hi ha serveis com
 \texttt{domini.dynu.com}. Utilitzar subdominis comporta algunes conseqüències,
 però no tenen cap impacte en les pràctiques d'aquesta assignatura.
 
-\begin{quote}
-  TASCA 1: Adquiriu un domini o subdomini.
-\end{quote}
+\begin{tasca}
+  Adquiriu un domini o subdomini.
+\end{tasca}
 
 \subsection{Gestionar un domini}
 
@@ -125,58 +129,191 @@ Un registrador també està obligat a oferir la possiblitat de traspassar el dom
 a un altre registrador. És un procés lent, però que garanteix que en cap moment el
 domini estarà "alliberat", és a dir, que cap persona externa el podrà adquirir.
 
-\begin{quote}
-  TASCA 2: Creeu en el gestor del registrador un registre \texttt{A} que relacioni
+\begin{tasca}
+  Creeu en el gestor del registrador un registre \texttt{A} que relacioni
   el domini adquirit (o un subdomini d'aquest) a l'adreça IPv4 del VPS de la
   pràctica 1. Creeu un registre \texttt{AAAA} amb la mateixa finalitat que l'anterior
   però per l'adreça IPv6.
 
-  Comproveu el funcionament de la tasca anterior utilitzant les eines \texttt{ping}
+  Comproveu el funcionament de la tasca utilitzant les eines \texttt{ping}
   o \texttt{dig} en el vostre ordinador.
-\end{quote}
+\end{tasca}
 
 \subsection{DNSSEC}
 
+Com molts protocols creats al principi d'Internet, no es va tenir en compte
+la seguretat en el DNS. Al tractar-se d'un servei que no requereix que es
+verifiqui l'autenticitat de les respostes a les consultes, resulta molt
+senzill realitzar atacs com \textit{DNS Poisoning}.
 
+Per mitigar aquest atac es va desenvolupar DNSSEC, unes extensions al
+protocol base que utilitzen claus asimètriques per demostrar que una
+resposta prové del remitent original.
+Podeu trobar més informació sobre l'atac i la mitigació d'aquest a
+\url{https://www.cloudflare.com/learning/dns/dns-cache-poisoning/}.
 
-Explicar:
+S'entrarà més en detall amb aquest tema quan es faci una introducció a la
+seguretat en les sessions de teoria. Tanmateix, al estar treballant en un
+entorn hostil, es recomana utilitzar DNSSEC des del primer moment.
+
+\begin{tasca}
+  Habiliteu DNSSEC pel vostre domini. Si el gestor del DNS és el mateix
+  que el registrador, aqueta tasca consistirà en fer un únic clic.
+\end{tasca}
+
+\section{DNS Invers}
+% tasca: canviar el hostname per tenir FQDN
+
+El DNS Invers o \textit{Reverse DNS} és un sistema que permet obtenir un
+domini a partir d'una adreça. Moltes eines de xarxa (tcpdump, wireshark, ...)
+utilitzen aquest sistema per oferir una interfície més amable a l'usuari.
+
+Es poden fer consultes de DNS invers amb l'opció \verb|-x|.
+Per exemple: \verb|dig -x 8.8.8.8| mostrarà el nom del servidor associat
+a aquesta IP: \verb|dns.google|. Si fem \verb|dig dns.google| tornem a obtenir
+l'adreça anterior, així tancant el cicle.
+
+Els noms de domini que es comporten d'aquesta manera circular se'ls anomena
+\textit{Fully Qualified Domain Name} (FQDN). Disposar d'un FQDN és de gran
+ajuda per donar credibilitat a un servidor de cara a realitzar certes tasques,
+com per exemple enviar correus electrònics.
+
+\begin{tasca}
+  Configureu els registres PTR al proveïdor d'Internet del vostre servidor per
+  obtenir un FQDN. Si és possible, realitzeu això per l'adreça IPv4 i IPv6.
+  En el cas de Hetzner, haureu d'anar a la pestanya de \textit{Networking}.
+
+  Compte! No tots els proveïdors permeten modificar els registres PTR.
+\end{tasca}
+
+Finalment, per acabar de preparar-nos per la pràctica següent, canviarem el
+nom de la màquina VPS pel FQDN que haurem creat. Els servidors de correu
+utilitzen per defecte el domini que s'obté a l'executar la comanda
+\verb|hostname|. Per exemple, si el nom de la màquina és \verb|itic.cat|,
+podrem crear adreces que acabin amb \texttt{@itic.cat}.
+
+\begin{tasca}
+  Canvieu el \textit{hostname} de la màquina virtual pel FQDN. Reinicia
+  la màquina per aplicar els canvis.
+\end{tasca}
+
+\section{Ampliació: DNS Dinamic}
+
+L'escassetat d'adreces IPv4 obliga els proveïdors d'internet fer alguns
+malabarismes per mantenir tots els usuaris connectats. La pràctica més
+utilitzada, si més no fins abans l'arribada del CG-NAT, era assignar una
+adreça IPv4 a l'usuari un cop aquest connectés l'encaminador a la xarxa, i
+alliberar l'adreça en el moment de la desconnexió. Aquesta tècnica es coneix
+com a IP Dinàmica.
+
+La principal desventatge de tenir una adreça que va canviant cada cert temps és
+que no ens la podem memoritzar o publicar, per tant no podem fer que altra gent
+es connecti de manera fiable al nostre encaminador. Una forma popular de
+so\lgem ucionar això és utilitzant un DNS Dinamic (DDNS).
+
+El DDNS està format per dues parts:
 \begin{itemize}
-  \item DNS, zones d'autoritat
-  \item TLD, subdomini
-  \item Qui assigna TLD i com es gestionen aquests
-  \item serveis de tercers
-  \item Seguretat: DNSSEC
-  \item DDNS per IPs variants, i altres aternatives
-  \item registres PTR
+  \item Un servidor DNS equipat amb una API per modificar els registres.
+  \item Un programa que s'executa cada pocs minuts en una màquina dintre de
+  la xarxa que té una IP Dinàmica. Aquest programa esbrinarà quina és
+  l'adreça IP pública actual i, mitjançant l'API anterior, actualitzarà
+  el registre DNS.
 \end{itemize}
 
-\section{Desenvolupament de la pràctica}
+Hi ha moltes combinacions d'APIs i programes que podeu utilitzar per
+realitzar un DDNS. En aquesta pràctica us proposem la següent configuració.
 
-Detallar tasques per:
-\begin{itemize}
+\begin{tasca}
+  Configureu un DDNS en el vostre portàtil. No servirà de gran cosa: només per
+  saber des de quina IPv4 es connecta l'ordinador. A continuació teniu
+  un exemple de passos a seguir, però podeu utilitzar els serveis que vulgueu:
+
+  \begin{itemize}
+    \item Creeu-vos un compte d'usuari a \url{https://dynu.com}.
+    \item Delegueu un subdomini als servidors de noms de Dynu, i associeu-lo
+    al vostre compte (\textit{Control Panel $\to$ DDNS Services $\to$ Add}).
+    \item Creeu un \textit{shell script} seguint el tutorial de
+    \url{https://www.dynu.com/DynamicDNS/IP-Update-Protocol} per poder
+    actualitzar l'adreça IP del subdomini.
+    \item Utilitzeu \textit{cron} o similars per fer que s'executi el script
+    anterior cada una hora. Podeu trobar un bon tutorial de \textit{crontab}
+    a \url{https://cronitor.io/guides/cron-jobs}.
+  \end{itemize}
+\end{tasca}
+
+
+\section{Ampliació: Delegació d'una zona d'autoritat}
+
+La darrera part d'aquesta pràctica consisteix en delegar un subdomini (o zona)
+al vostre VPS. En aquest insta\lgem arem un servidor de noms de domini
+(com per exemple \texttt{bind}) i servirem des d'aquest les respostes
+a les consultes autoritatives.
+
+Per realitzar aquesta ampliació resulta imprescindible llegir l'enunciat
+alternatiu de la pràctica 3.
+
+\begin{tasca}
+  Delegueu una zona d'autoritat al vostre VPS i serviu des d'allà algun
+  registre DNS. Comproveu amb \verb|dig| que podeu fer consultes
+  autoritatives però no recursives al vostre servidor.
+
+  Per exemple, si el domini adquirit és \texttt{itic.cat}, es pot delegar
+  \texttt{serv.itic.cat} al VPS amb aquestes dues línies en el vostre gestor
+  de DNS:
+
+  \begin{verbatim}
+    vps.itic.cat.    A    100.200.100.200
+    serv.itic.cat.   NS   vps.itic.cat
+  \end{verbatim}
+
+  Llavors, en el VPS, configureu BIND per afegir alguna cosa:
+
+  \begin{verbatim}
+    test.serv.itic.cat.    A    250.250.250.250
+  \end{verbatim}
+\end{tasca}
+
+%Explicar:
+%\begin{itemize}
+  %\item DNS, zones d'autoritat
+  %\item TLD, subdomini
+  %\item Qui assigna TLD i com es gestionen aquests
+  %\item serveis de tercers
+  %\item Seguretat: DNSSEC
+  %\item DDNS per IPs variants, i altres aternatives
+  %\item registres PTR
+%\end{itemize}
+
+%\section{Desenvolupament de la pràctica}
+
+%Detallar tasques per:
+%\begin{itemize}
   %\item Adquirir un domini (proposar Cloudflare o dinahosting si és .cat),
   %o bé un subdomini amb serveis de tercers com dynu.com .
   %\item Posar registre A i AAAA d'un subdomini al VPS anterior.
-  \item Habilitar DNSSEC i comprovar que funciona.
-  \item Utilitzar dynu per posar DDNS al portàtil via cronjob. Així sabrem
-  sempre a on està el nostre portàtil.
-  \item Si el proveïdor ho permet, posar registre PTR.
-  \item Canviar el hostname del servidor.
-\end{itemize}
+  %\item Habilitar DNSSEC i comprovar que funciona.
+  %\item Utilitzar dynu per posar DDNS al portàtil via cronjob. Així sabrem
+  %sempre a on està el nostre portàtil.
+  %\item Si el proveïdor ho permet, posar registre PTR.
+  %\item Canviar el hostname del servidor.
+%\end{itemize}
 
 \section{Avaluació}
 \subsection{Entrega}
 \label{sec:entrega}
 
-S'ha d'entregar un fitxer de text (\texttt{P3\_GX.txt}, on X és el número o 
-lletra del grup) amb el següent format:
+S'ha d'entregar un fitxer comprimit (\texttt{P3\_GX.zip}, on X és el número o 
+lletra del grup) amb un fitxer de text amb el següent format:
 
 \begin{verbatim}
 Grup: GX
 Domini adquirit: asi.itic.cat
-Servidor: srv1.asi.itic.cat
+VPS: srv1.asi.itic.cat
 Contrasenya usuari profe: Lkv5YYyON8X
 Port SSH: 22
+
+(ometre si no heu fet les ampliacions)
+DDNS: portatil.asi.itic.cat
 
 (Comentaris referents a l'entrega, si s'escau)
 \end{verbatim}
@@ -189,14 +326,13 @@ obtenir a partir dels dominis.
 Al servidor, creeu el directori \texttt{/entregues} a l'arrel, i a dins un
 directori \texttt{/entregues/p3}. Allà hi heu de deixar els scripts i/o manuals
 (el que cregueu convenient) que us farien falta si mai haguéssiu de repetir
-aquesta pràctica.
+aquesta pràctica. Afegiu aquests fitxers també al fitxer comprimit de l'entrega.
 
 Per exemple, podríeu indicar:
 \begin{itemize}
-  \item El proveïdor que heu utilitzat, els seus preus i ofertes, i el perquè l'heu escollit.
-  \item Solucions a problemes que us heu trobat, i si cal, enllaços a fòrums o manuals.
-  \item Comandes que heu utilitzat amb una petita explicació de què fan (1 línia sol ser suficient).
-  \item Altres coses que hagueu fet (per exemple, configurar el tallafocs de \textit{Hetzner}).
+  \item Quin proveïdor de dominis heu utilitzat i per què.
+  \item Quins subdominis heu fet servir per cada punt de la pràctica.
+  \item Quins scripts o fitxers heu utilitzat o modificat.
 \end{itemize}
 
 No ha de ser extens; aquests documents us serviran a vosaltres si mai heu de
@@ -210,11 +346,13 @@ Aquesta pràctica s'avaluarà de la següent manera. La puntuació màxima és 1
   \begin{tabular}{p{0.7\linewidth} l}
   \hline
   Concepte & Rang \\ \hline
-  Fitxer de l'entrega (\texttt{P3\_GX.txt}) amb format correcte & $[-20, 0]$ \\
+  Fitxer de l'entrega (\texttt{P3\_GX.zip}) amb format correcte & $[-20, 0]$ \\
   Es pot resoldre el nom del servidor per IPv4 i IPv6 & $[0, 20]$ \\
   El hostname del servidor és el del domini & $[0, 10]$ \\
-  La resolució inversa de les adreces IPv4 i IPv6 del servidor permeten obtenir el domini (FQDN) & $[0, 20]$ \\
-  Qualitat dels scripts/tutorials de \texttt{/entregues/p3} & $[0,50]$ \\
+  La resolució inversa de les adreces IPv4 i IPv6 del servidor permeten obtenir el domini (FQDN) & $[0, 10]$ \\
+  Correcte funcionament del DDNS & $[0, 20]$ \\
+  Configuració i correcte funcionament del servidor autoritatiu muntat al VPS & $[0, 10]$ \\
+  Qualitat dels scripts/tutorials de \texttt{/entregues/p3} & $[0,30]$ \\
   El servidor presenta problemes de seguretat greus & $[-10,0]$ \\
   \hline
   \end{tabular}
