@@ -1,0 +1,247 @@
+\documentclass{practicaitic}
+\usepackage{parskip}
+\usepackage{graphicx}
+
+\usepackage[onelevel]{exercici}
+%\usepackage[utf8]{inputenc}
+
+\usepackage{tcolorbox}
+
+\numpract{3}
+\title{Pràctica 4: Servei de correu}
+
+\assignatura{Aplicacions i Serveis sobre Internet}
+\autor{Eric Roy Almonacid \and Francisco del Águila López}
+
+\begin{document}
+
+\section{Introducció}
+
+Per poder realitzar aquesta pràctica és indispensable haver completat la
+pràctica 1 i 3, donat que treballarem sobre el VPS i domini creats anteriorment.
+
+\begin{tcolorbox}[
+  title=Atenció,
+  colback=red!10, colframe=red!50,
+  rounded corners
+]
+Per aquesta pràctica el servidor hauria de poder enviar paquets TCP al 
+port 25. Si utilitzeu \textit{Hetzner}, haureu de realitzar una petició
+per desbloquejar els ports a la secció de \textit{Limits}.
+La documentació de \textit{Hetzner} demana que els usuaris tinguin una
+antiguitat superior a un mes per treure els límits.
+\newline
+
+Si no aconseguiu desbloquejar l'accés a aquests ports dirigiu-vos a
+l'apartat \ref{sec:plan-b}.
+\end{tcolorbox}
+
+\subsection{Objectius}
+
+Al finalitzar aquesta pràctica, l'estudiantat haurà:
+\begin{enumerate}
+  \item Entès el funcionament i l'arquitectura del servei de correu.
+  \item Utilitzat \texttt{postfix} per enviar correus de forma local.
+  \item Configurat un servidor de recepció de correus obert a Internet.
+  \item Configurat l'enviament de correus a Internet des del servidor.
+  \item Entès totes les tasques addicionals que cal dur a terme per
+  esdevenir un remitent de correu fiable.
+\end{enumerate}
+
+\subsection{Condicions}
+
+Aqeusta pràctica està cal·librada per ésser treballada en equips de 2 persones,
+i té una durada de 2 setmanes.
+
+\subsection{Lliuraments}
+
+S'haurà de realitzar una entrega a Atenea i mantenir operatiu el servidor 
+i domini creats fins que la pràctica sigui avaluada. El format de l'entrega
+està detallat a l'apartat \ref{sec:entrega}.
+
+\section{El correu electrònic}
+
+El correu electrònic que coneixem avui es segueix basant en la
+implementació original que va aparéixer a ARPANET l'any
+1981, quan es va publicar les especificacions del protocol SMTP
+(\textit{Simple Mail Transfer Protocol}). Aleshores, Internet consistia
+en una xarxa amb molt pocs nodes i de difícil accés.
+
+L'extensió d'Internet i la facilitat d'enviar correus massivament o bé
+impersonant algú altre han obligat crear extensions de seguretat per
+SMTP: des d'utilitzar TLS fins a autenticar els missatges en funció
+de registres en el DNS. Hi ha molts factors a tenir presents si
+es vol enviar correus electrònics a grans proveïdors com Gmail.
+Tot plegat fa que ens puguem preguntar si la S de SMTP segueix
+significant \textit{Simple}.
+
+Aquesta pràctica pretén oferir una guia per poder convertir el vostre
+VPS en un servidor de correu i així no haver de pagar mensualitats 
+massa elevades per només disposar d'una adreça electrònica corporativa.
+Hi ha projectes com \href{https://docs.mailway.app/self-host/}{MailWay} o 
+\href{https://docs.mailcow.email}{MailCow} que permeten configurar un
+servidor de correu en pocs passos, però en aquesta pràctica utilitzarem
+\texttt{postfix} per entendre realment què estem fent.
+
+\subsection{La visió original}
+
+Al ser un protocol que porta més de 40 anys en funcionament, és d'esperar
+que SMTP tingui peculiaritats degudes als sistemes d'aquella època. Per
+entendre el perquè d'algunes funcionalitats que veurem més endavant és
+convenient dedicar uns paràgrafs al passat d'aquest sistema.
+
+En el moment de la seva creació, la gran majoria d'usuaris només disposaven
+d'un únic ordinador, sovint compartit amb altres persones, i només accedia
+al correu a través d'aquest. Per tant, era lògic pensar que es podria
+utilitzar la notació \texttt{usuari@maquina} com a identificador
+per enviar correus. Si es vol una altra bústia, només cal crear un
+nou usuari al sistema.
+
+A més a més, cada ordinador tenia una adreça IP pública. Només calia
+fer coincidir el \textit{hostname} de la màquina amb el nom de domini
+d'aquesta i ja es disposaria d'un identificador accesible des de tot
+arreu. Per això veure que \texttt{postfix} posa complicacions si volem
+gesionar diversos noms de domini des d'un mateix servidor.
+
+Finalment, cal tenir present que no tots els ordinadors estaven
+encesos i encara menys connectats a internet tota l'estona (sobretot
+quan les connexions amb ADSL es facturaven per temps d'utilització).
+Així doncs, és possible que un usuari envii un correu electrònic a
+una màquina que està apagada, i que estigui desconnectat quan l'altre
+el pugui rebre. Per aquest motiu es van dissenyar els servidors MTA
+(\textit{Mail Transfer Agent}), que rebien el correu dels usuaris o
+MUA (\textit{Mail User Agent}) i s'encarregaven de dur-lo al
+destinatari i esperar si feia falta.
+
+Actualment, tot i seguir podent utilitzar servidors MTA com si res,
+gairebé tots els servidors de correu estan sempre disponibles, pel
+que han perdut la seva utilitat.
+
+\subsection{Enviament en local}
+
+El correu més bàsic que es pot enviar és entre dos usuaris de la
+mateixa màquina. En aquest apartat configurarem el servidor
+per poder enviar-vos correus entre els diferents integrants
+del grup.
+
+\begin{tasca}
+  TODO install postfix, localhost, try, send mail to profe
+\end{tasca}
+
+\subsection{Recepció des d'Internet}
+
+\begin{previ}
+  TODO posar registre MX al DNS. Es poden posar múltiples,
+  perquè si igualment SMTP funcionava amb downtimes?
+\end{previ}
+
+\begin{tasca}
+  Enviar mail des de l'adreça UPC al vps, un per cada usuari.
+\end{tasca}
+
+\subsection{Us d'alies}
+
+\begin{tasca}
+  Posar esutdiantat@ que redirigeixi als dos estudiants, tots@ també a profe. Enviar mail.
+\end{tasca}
+
+\subsection{Enviament a través d'Internet}
+
+TODO Potser posar el warning aquí?
+
+\begin{previ}
+  Comprovar que hi hagi els ports
+
+  nc -vv smtp.google.com 25
+  nc -vv smtp.google.com 465
+\end{previ}
+
+\begin{tasca}
+  Envieu mails a altres grups. Podeu inclús parlar-vos amb grups
+  que no tinguin adreça pública, sempre i quan estigueu connectats
+  a la VPN i tinguin associat un nom de domini a l'IP pertinent.
+
+  Fixeu-vos que postfix
+  i exim son dues implementacions diferents del protocol i s'entenen.
+\end{tasca}
+
+\begin{tasca}
+  envieu un mail al vostre compte UPC (que gestiona Google). Veureu que apareix a SPAM.
+  Si no apareix, mireu la bústia de correu de postfix per si
+  Google us ha retornat un missatge d'error.
+\end{tasca}
+
+\subsubsection{Alternativa per si no es pot utilitzar els ports de SMTP}
+\label{sec:plan-b}
+
+Degut a l'abús que fan els criminals dels VPS per enviar correus
+fraudulents, els proveïdors solen filtrar les connexions sortints
+als ports de SMTP. Moltes vegades és suficient amb un missatge per
+eliminar aquest límit, però en alguns casos aquests no s'aconsegueix.
+
+Si vulguéssiu utilitzar el correu de forma comercial no tindríeu cap
+altre remei que esperar o canviar de proveïdor, però els terminis
+d'aquesta pràctica obliguen a trobar formes alternatives d'experimentar
+amb SMTP.
+
+Així doncs, pel que queda d'enunciat de la pràctica, si no podeu
+enviar correus a través d'Internet amb els ports de SMTP, 
+
+\section{Avaluació}
+\subsection{Entrega}
+\label{sec:entrega}
+
+S'ha d'entregar un fitxer comprimit (\texttt{P4\_GX.zip}, on X és el número o 
+lletra del grup) amb un fitxer de text amb el següent format:
+
+\begin{verbatim}
+Grup: GX
+VPS: srv1.asi.itic.cat
+Contrasenya usuari profe: Lkv5YYyON8X
+Port SSH: 22
+
+(Comentaris referents a l'entrega, si s'escau)
+\end{verbatim}
+
+La majoria de dades son referents a les pràctiques anteriors. Es demana
+que les torneu a escriure, així teniu la possibiltat de canviar-les.
+
+Al servidor, creeu el directori \texttt{/entregues} a l'arrel, i a dins un
+directori \texttt{/entregues/p4}. Allà hi heu de deixar els scripts i/o manuals
+(el que cregueu convenient) que us farien falta si mai haguéssiu de repetir
+aquesta pràctica. Afegiu aquests fitxers també al fitxer comprimit de l'entrega.
+
+Per exemple, podríeu indicar:
+\begin{itemize}
+  \item aaaa
+\end{itemize}
+
+No ha de ser extens; aquests documents us serviran a vosaltres si mai heu de
+tornar a realitzar aquest procés.
+
+\subsection{Qualificació}
+
+Aquesta pràctica s'avaluarà de la següent manera. La puntuació màxima és 100.
+
+\begin{center}%{|p{1cm}|p{3cm}|}
+  \begin{tabular}{p{0.7\linewidth} l}
+  \hline
+  Concepte & Rang \\ \hline
+  Fitxer de l'entrega (\texttt{P4\_GX.zip}) amb format correcte & $[-20, 0]$ \\
+  aaaa & $[0, 20]$ \\
+  aaaa & $[0, 10]$ \\
+  aaaa & $[0, 10]$ \\
+  Caaa & $[0, 20]$ \\
+  Caaa & $[0, 10]$ \\
+  Qualitat dels scripts/tutorials de \texttt{/entregues/p4} & $[0,30]$ \\
+  El servidor presenta problemes de seguretat greus & $[-10,0]$ \\
+  \hline
+  \end{tabular}
+\end{center}
+
+Tingueu present que si algun element de la taula anterior no es pot avaluar
+aquest es qualificarà amb la nota més baixa.
+
+Si es detecta algun tipus de frau en l'entrega aquesta rebrà una puntuació de zero.
+
+\end{document}
