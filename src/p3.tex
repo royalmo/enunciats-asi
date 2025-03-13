@@ -31,7 +31,7 @@ Al finalitzar aquesta pràctica, l'estudiantat haurà:
 
 \subsection{Condicions}
 
-Aqeusta pràctica està cal·librada per ésser treballada en equips de 2 persones,
+Aquesta pràctica està ca\l.librada per ésser treballada en equips de 2 persones,
 i té una durada de 1 a 2 setmanes.
 
 \subsection{Lliuraments}
@@ -63,7 +63,7 @@ Així doncs, un servidor de DNS es pot distingir segons la funció que realitza:
     servidors DNS sub-zones d'autoritat.
 
     N'hi ha de dos tipus: primaris i secundaris. Els secundaris tenen la mateixa
-    informació que els primaris i es fan servir per reduncància.
+    informació que els primaris i es fan servir per redundància.
   \item Local: (\textit{local name server}): aquest servidor consulta iterativament
     als servidors autoritatius fins a obtenir el resultat de la consulta. A més, pot
     guardar en \textit{caché} les respostes de les consultes.
@@ -87,9 +87,9 @@ Amb el creixement d'Internet, aquest va arribar a territoris estrangers, i es va
 assignant un TLD a cadascun d'ells: \textit{.es}, \textit{.pt}, etc. Actualment,
 l'ICANN crea TLDs per molts col·lectius diferents, i delega la seva
 autoritat a una entitat. En el cas del TLD \textit{.cat}, aquest és gestionat des
-dels seus inicis per la Fundació .cat : \url{https://fundació.cat}.
+dels seus inicis per la Fundació .cat : \url{https://fundacio.cat}.
 
-Quan es parla col·loquialment d'\textit{adquirir un domini}, es refereix
+Quan es parla co\l.loquialment d'\textit{adquirir un domini}, es refereix
 a arribar a un tracte amb una entitat que disposa d'un TLD perquè aquesta
 ens reservi i delegui l'autoritat d'un subdomini. Cada TLD pot posar les
 condicions (preu, finalitat, idioma dels continguts) que desitja. En el cas
@@ -103,13 +103,13 @@ En el cas del domini .cat, podeu consultar els registradors disponibles a
 
 \subsection{Registrar un domini}
 
-La primera tasca d'aquesta pràctica consistirà en regsitrar un domini
+La primera tasca d'aquesta pràctica consistirà en registrar un domini
 amb un registrador. Qualsevol registrador és igual de vàlid, però si busqueu
 una alternativa econòmica us recomanem \url{https://dinahosting.com} pels
 dominis .cat i \url{https://cloudflare.com} per la resta (\textit{.com}, \textit{.net}, \textit{.es}, ...).
 
 Existeixen alternatives per si no voleu pagar per un domini. Hi ha serveis com
-\url{https://dynu.com} que et cedeixen gratüitament un domini de l'estil
+\url{https://dynu.com} que et cedeixen gratuïtament un domini de l'estil
 \texttt{domini.dynu.com}. Utilitzar subdominis comporta algunes conseqüències,
 però no tenen cap impacte en les pràctiques d'aquesta assignatura.
 
@@ -122,10 +122,10 @@ però no tenen cap impacte en les pràctiques d'aquesta assignatura.
 Cada registrador té la seva interfície, però gairebé tots permeten gestionar
 els registres DNS. En cas que no ho permeti o que es vulgui utilitzar un altre
 servidor de noms de domini (ja sigui propi o un altre servei), un registrador
-sempre ha d'oferir la possiblitat de canviar les entrades \texttt{NS}. D'aquesta
+sempre ha d'oferir la possibilitat de canviar les entrades \texttt{NS}. D'aquesta
 manera és possible gestionar un domini .cat amb \textit{cloudflare}.
 
-Un registrador també està obligat a oferir la possiblitat de traspassar el domini
+Un registrador també està obligat a oferir la possibilitat de traspassar el domini
 a un altre registrador. És un procés lent, però que garanteix que en cap moment el
 domini estarà "alliberat", és a dir, que cap persona externa el podrà adquirir.
 
@@ -158,7 +158,7 @@ entorn hostil, es recomana utilitzar DNSSEC des del primer moment.
 
 \begin{tasca}
   Habiliteu DNSSEC pel vostre domini. Si el gestor del DNS és el mateix
-  que el registrador, aqueta tasca consistirà en fer un únic clic.
+  que el registrador, aquesta tasca consistirà en fer un únic clic.
 \end{tasca}
 
 \section{DNS Invers}
@@ -173,10 +173,19 @@ Per exemple: \verb|dig -x 8.8.8.8| mostrarà el nom del servidor associat
 a aquesta IP: \verb|dns.google|. Si fem \verb|dig dns.google| tornem a obtenir
 l'adreça anterior, així tancant el cicle.
 
-Els noms de domini que es comporten d'aquesta manera circular se'ls anomena
-\textit{Fully Qualified Domain Name} (FQDN). Disposar d'un FQDN és de gran
-ajuda per donar credibilitat a un servidor de cara a realitzar certes tasques,
-com per exemple enviar correus electrònics.
+El concepte de \textit{Fully Qualified Domain Name} (FQDN) no és més
+que el nom de domini complert d'un computador a Internet. Aquest FQDN
+inclou el nom de l'equip i el domini al que pertany. La comanda
+\verb|hostname| i les seves variants (consulteu el manual) determinen
+el nom de l'equip, així com el domini associat al computador. Les
+bones pràctiques associades a la gestió de sistemes (computadors)
+recomanen que hagi coincidència entre el que existeix en el registres
+del sistema de DNS i el que el computador té configurat tant de nom de
+màquina com de nom de domini. D'aquesta manera, les consultes internes
+per part del sistema operatiu coincidiran amb les consultes al servei
+de DNS. Disposar d'un FQDN és de gran ajuda per donar credibilitat a
+un servidor de cara a realitzar certes tasques, com per exemple enviar
+correus electrònics.
 
 \begin{tasca}
   Configureu els registres PTR al proveïdor d'Internet del vostre servidor per
@@ -184,16 +193,25 @@ com per exemple enviar correus electrònics.
   En el cas de Hetzner, haureu d'anar a la pestanya de \textit{Networking}.
 
   Compte! No tots els proveïdors permeten modificar els registres PTR.
+
+  Si esteu treballant sense VPS, el vostre proveïdor d'Internet és qui
+  us hauria de proporcionar la possibilitat de definir el registre
+  PTR. Pràcticament la totalitat dels proveïdors d'Internet
+  \textbf{no} ofereixen aquesta opció.
 \end{tasca}
 
-Finalment, per acabar de preparar-nos per la pràctica següent, canviarem el
-nom de la màquina VPS pel FQDN que haurem creat. Els servidors de correu
-utilitzen per defecte el domini que s'obté a l'executar la comanda
-\verb|hostname|. Per exemple, si el nom de la màquina és \verb|itic.cat|,
-podrem crear adreces que acabin amb \texttt{@itic.cat}.
+Finalment, per acabar de preparar-nos per les següents pràctiques,
+canviarem el nom de la màquina VPS pel FQDN que haurem creat. Els
+servidors de correu utilitzen per defecte el domini que s'obté a
+l'executar la comanda \verb|hostname --fqdn|. Per exemple, si el nom
+de la màquina és \verb|correu| i el nom de domini és \verb|itic.cat|,
+podrem crear adreces que acabin amb \texttt{@correu.itic.cat}. Per
+gestionar tant nom de l'equip com domini que té internament un
+computador, disposeu de les comandes \verb|hostname| amb les seves
+opcions i \verb|dnsdomainname|.
 
 \begin{tasca}
-  Canvieu el \textit{hostname} de la màquina virtual pel FQDN. Reinicia
+  Configureu adequadament el FQDN de la màquina virtual. Reinicia
   la màquina per aplicar els canvis.
 \end{tasca}
 
@@ -206,7 +224,7 @@ adreça IPv4 a l'usuari un cop aquest connectés l'encaminador a la xarxa, i
 alliberar l'adreça en el moment de la desconnexió. Aquesta tècnica es coneix
 com a IP Dinàmica.
 
-La principal desventatge de tenir una adreça que va canviant cada cert temps és
+La principal desavantatge de tenir una adreça que va canviant cada cert temps és
 que no ens la podem memoritzar o publicar, per tant no podem fer que altra gent
 es connecti de manera fiable al nostre encaminador. Una forma popular de
 so\lgem ucionar això és utilitzant un DNS Dinamic (DDNS).
@@ -236,7 +254,7 @@ realitzar un DDNS. En aquesta pràctica us proposem la següent configuració.
     \url{https://www.dynu.com/DynamicDNS/IP-Update-Protocol} per poder
     actualitzar l'adreça IP del subdomini.
     \item Utilitzeu \textit{cron} o similars per fer que s'executi el script
-    anterior cada una hora. Podeu trobar un bon tutorial de \textit{crontab}
+    anterior cada cert temps. Podeu trobar un bon tutorial de \textit{crontab}
     a \url{https://cronitor.io/guides/cron-jobs}.
   \end{itemize}
 \end{tasca}
