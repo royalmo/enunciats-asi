@@ -273,17 +273,203 @@ d'aquesta pràctica obliguen a trobar formes alternatives d'experimentar
 amb SMTP.
 
 Així doncs, pel que queda d'enunciat de la pràctica, si no podeu
-enviar correus a través d'Internet amb els ports de SMTP, ...
+enviar correus a través d'Internet amb els ports de SMTP, haureu de realitzar
+totes les parts que pugueu entre diversos servidors disponibles a la mateixa
+VPN: fixeu-vos que no podeu realitzar connexions al port 25 a Google, però sí
+al rang de la VPN de l'escola.
 
-\section{Guanyar-se la confiança dels gegants}
+\section{Servidor de correu amb bona reputació}
 \label{sec:reputation}
 
-\subsection{FQDN}
+Tal i com s'ha comentat en apartats anteriors, amb el pas del temps s'han
+afegit diverses extensions al protocol SMTP per verificar que el correu en
+qüestió és legítim. Alguns son protocols nous, altres son simplement bones
+pràctiques.
+
+En l'actualitat és escencial poder complir amb tots els requeriments que els
+grans proveïdors de correu electrònic comproven per tal de tenir un servidor
+de correu útil.
+
+En aquest apartat es detalla tot el que s'ha de tenir present per deixar
+d'apareixer a la carpeta de correu brossa.
+
+\subsection{DNS invers}
+
+\begin{tasca}
+  Verifiqueu que el DNS invers de la IP del vostre servidor porta al domini
+  del servidor (aquesta tasca ja la vau fer a la pràctica 3).
+\end{tasca}
+
 \subsection{Blacklists}
-\subsection{SPF}
-\subsection{DKIM}
-https://fornex.com/help/dkim-exim/
-\subsection{DMARC}
+
+La majoria de servidors de correu rebutgen correus si aquests apareixen a
+llistes negres d'adreces IP. Hi ha diverses llistes públiques que la majoria
+de servidors de correu consulten.
+A més a més, alguns proveïdors, com Google, fan servir llistes pròpies a part
+de les mencionades anteriorment.
+
+\begin{tasca}
+  Utilitzeu una eina online (per exemple \url{https://mxtoolbox.com/blacklists.aspx})
+  per comprovar si les adreces IPv4 i IPv6 del vostre servidor apareixen en una
+  llista negra.
+\end{tasca}
+
+És molt probable (donat que no estem utilitzant una IP $100\%$ nova) que
+estiguem en alguna llista. Caldrà doncs, llista per llista, sol·licitar
+que es suprimeixi l'adreça del nostre servidor. No cal que us desapunteu
+dels llocs on us demani pagar (si més no, no per aquesta pràctica).
+
+La llista en la que apareixereu amb més probabilitat és la \textit{RATS-NoPtr},
+una llista que apunta totes les adreces sense DNS invers configurat
+correctament. Només cal configurar el DNS invers i omplir el formulari per
+(al cap d'uns dies) desaparéixer d'aquesta llista.
+
+\subsection{Verificació del remitent amb SPF}
+
+SPF o \textit{Sender Policy Framework} és sens dubte l'extensió que més es miren
+els proveïdors per determinar si un correu és legítim o no, degut a la seva
+simplicitat. Consisteix en introduir un registre TXT al servidor de noms
+que contingui la informació necessària per tal que un servidor de correu pugui
+determinar si el correu rebut prové d'un remitent legítim o no.
+
+Podem consultar utilitzant \texttt{dig} registres SPF d'altres dominis
+(s'ha mostrat només els registres TXT útils per aquesta pràctica):
+
+\begin{verbatim}
+dig +short txt epsem.upc.edu
+"v=spf1 mx ip4:147.83.2.50 ip4:147.83.2.51 ip4:147.83.2.77 ?all"
+\end{verbatim}
+
+Basant-se en la comanda anterior, els correus electrònics de la EPSEM
+(a data d'abril de 2025) es poden enviar des de 3 adreces IPv4 diferents i
+des de l'adreça (o adreces) que es puguin obtenir a partir del
+registre MX del mateix domini.
+
+La darrera paraula del registre sempre serà \texttt{all} i vindrà precedida per
+un caràcter que determinarà el comportament de SPF:
+\begin{itemize}
+  \item \texttt{+all}: permet tot el trànsit (poc recomanat, indica \textit{pass}").
+  \item \texttt{-all}: rebutja tot el trànsit no autoritzat explícitament (\textit{fail}).
+  \item \verb|~all|: marca com a sospitós (posa en quarantena) el trànsit no autoritzat (\textit{softfail}).
+  \item \texttt{?all}: no especifica cap política clara pel trànsit no autoritzat (\textit{neutral}).
+\end{itemize}
+
+Tambe es pot utilitzar \texttt{include} per incloure tots els remitents d'un altre
+domini:
+
+\begin{verbatim}
+dig +short txt google.com
+"v=spf1 include:_spf.google.com ~all"
+\end{verbatim}
+
+Podeu consultar el llistat detallat d'opcions pel registre SPF a
+\url{https://support.google.com/a/answer/10683907} o al
+\href{https://datatracker.ietf.org/doc/html/rfc7208}{RFC 7208}.
+
+\begin{tasca}
+  Configureu SPF al vostre domini per tal que s'acceptin correus sortint només
+  del vostre servidor (IPv4 i IPv6). La resta de correus es poden deixar en
+  quarantena.
+
+  Proveu d'enviar de nou un correu electrònic a la vostra adreça de la UPC
+  i comproveu si es segueix rebent al correu brossa o no (espereu-vos unes hores
+  per assegurar-vos que s'hagin propagat els canvis del DNS).
+\end{tasca}
+
+\subsection{Signatura de correus amb DKIM}
+
+Encara que amb la tasca anterior ja us apareguin els correus a la safata
+d'entrada, per assegurar que això segueixi sent així cal realitzar dos passos
+més.
+
+DKIM o \textit{DomainKeys Identified Mail} és un sistema que permet signar
+correus electrònics sortints per demostrar al destinatari que aquests no han
+estat modificats.
+Consisteix en deixar una clau pública en un registre TXT del domini i signar
+tots els missatges sortints amb la seva clau privada, emmagatzemada al servidor.
+
+\begin{tasca}
+  Configureu el vostre servidor de correu per utilitzar DKIM. Heu de:
+  \begin{enumerate}
+    \item Generar un parell de claus públiques i privades.
+    \item Notificar a exim que utilitzi DKIM i indicar el lloc de la clau privada.
+    \item Aplicar la configuració i reiniciar exim.
+    \item Publicar la clau pública en un registre DNS.
+  \end{enumerate}
+\end{tasca}
+
+Podeu seguir algun tutorial com el següent: \url{https://bobcares.com/blog/configuring-dkim-for-exim/}.
+
+Pel darrer pas (publicar la clau pública al DNS), heu de copiar els continguts
+del fitxer de la clau pública que hagueu generat al registrador de DNS en
+forma de registre TXT a \texttt{<DKIM\_SELECTOR>.\_domainkey.<SERVIDOR>}, on 
+haureu de reemplaçar el primer valor pel selector que hagueu utilitzat en el
+fitxer de configuració d'Exim.
+
+El resultat hauria de ser similar al següent. Compte! Elimineu tots els salts
+del línia en el moment d'enganxar la clau.
+
+\begin{verbatim}
+dig +short txt <DKIM_SELECTOR>._domainkey.<SERVIDOR>
+"v=DKIM1; k=rsa; p=MIIBIjANBgk[...]DAQAB"
+\end{verbatim}
+
+\begin{tasca}
+Comproveu el funcionament de DKIM. Podeu utilitzar l'eina
+\url{https://www.mail-tester.com/} per verue si està tot funcionant correctament.
+
+Si envieu un correu a un altre usuari de la màquina, podreu veure que la capçalera
+del correu és més gran que abans, ja que inclou la signatura.
+\end{tasca}
+
+\subsection{Configuració del registre DMARC}
+
+% TODO
+
+\section{Protecció dels correus entrants}
+
+De la mateixa manera que a l'apartat anterior hem augmentat la reputació
+del nostre correu per demostrar al destinatari que som un remitent autoritzat,
+podem (i hauríem) de configurar Exim per denegar correus indicis flagrants de
+fraudulència.
+
+\subsection{Email spoofing}
+
+Per veure la necessitat d'implementar proteccions en correus electrònics
+anem a demostrar com de fàcil és suplantar la identitat en el protocol SMTP
+(evidentment, sense utilitzar SPF/DKIM/DMARC).
+
+\begin{tasca}
+Utilitzeu \textit{netcat} per connectar-vos al port 25 del vostre servidor des
+del portàtil (avís: segurament no podreu realitzar això si esteu a
+\textit{eduroam} ja que aquest també bloqueja connexions sortints per aquest
+port). Escriviu, una per una, les següents línies.
+\end{tasca}
+
+\begin{tcolorbox}[
+  colback=gray!10, colframe=gray!50,
+  rounded corners
+]
+\begin{verbatim}
+HELO localhost
+MAIL FROM:<rector@upc.edu>
+RCPT TO:<tothom@EL_VOSTRE_DOMINI>
+DATA
+From: rector@upc.edu
+To: tothom@EL_VOSTRE_DOMINI
+Subject: Estic suplantant el rector
+
+Estic suplantant el rector. Podria dir qualsevol cosa.
+
+.
+QUIT
+\end{verbatim}
+\end{tcolorbox}
+
+Fixeu-vos que hem fet de servidor de correu electrònic. Verifiqueu que heu rebut
+el correu electrònic i no teniu forma de verificar el remitent autèntic.
+
+\subsection{Filtres de correus bàsics a exim}
 
 \section{Extensions}
 \subsection{Enviar a través d'un client}
