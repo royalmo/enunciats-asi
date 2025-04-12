@@ -398,7 +398,9 @@ tots els missatges sortints amb la seva clau privada, emmagatzemada al servidor.
   \end{enumerate}
 \end{tasca}
 
-Podeu seguir algun tutorial com el següent: \url{https://bobcares.com/blog/configuring-dkim-for-exim/}.
+Podeu seguir algun tutorial com el següent: \url{https://bobcares.com/blog/configuring-dkim-for-exim/}. Possiblement pel vostre cas hi haurà certs detalls
+a canviar. Us pot ser útil consultar els errors i \textit{logs} que exim es
+va trobant al fitxer \texttt{/var/log/exim4/mainlog}.
 
 Pel darrer pas (publicar la clau pública al DNS), heu de copiar els continguts
 del fitxer de la clau pública que hagueu generat al registrador de DNS en
@@ -416,7 +418,8 @@ dig +short txt <DKIM_SELECTOR>._domainkey.<SERVIDOR>
 
 \begin{tasca}
 Comproveu el funcionament de DKIM. Podeu utilitzar l'eina
-\url{https://www.mail-tester.com/} per verue si està tot funcionant correctament.
+\url{https://dkimvalidator.com/} o enviar un mail a check-auth@verifier.port25.com
+per verue si està tot funcionant correctament.
 
 Si envieu un correu a un altre usuari de la màquina, podreu veure que la capçalera
 del correu és més gran que abans, ja que inclou la signatura.
@@ -424,16 +427,47 @@ del correu és més gran que abans, ja que inclou la signatura.
 
 \subsection{Configuració del registre DMARC}
 
-% TODO
+El darrer pas és configura DMARC o
+\textit{Domain-based Message Authentication, Reporting, and Conformance}.
+Aquesta extensió permet informar als destinataris què han de fer quan reben
+un correu electrònic: comprovar (o no) SPF i DKIM, reportar estadístiques
+a alguna adreça de correu, entre d'altres coses.
 
-\section{Protecció dels correus entrants}
+Els grans proveïdors solen demanar DMARC, i serveix per veure quins correus
+electrònics han sigut rebutjats, i així poder tenir un seguiment d'aquests.
+Només cal configurar un registre DNS de tipus TXT: \texttt{\_dmarc.<DOMINI>}.
+El registre més minimalista té el següent aspecte:
+
+\begin{verbatim}
+dig +short txt _dmarc.<DOMINI>
+"v=DMARC1; p=quarantine; rua=mailto:<REPORT_EMAIL>"
+\end{verbatim}
+
+Podeu consultar més detalls sobre el protocol i quines opcions posar a
+\url{https://support.google.com/a/answer/2466580} o al
+\href{https://datatracker.ietf.org/doc/html/rfc7489}{RFC 7489}.
+
+\begin{tasca}
+  Configureu DMARC al vostre domini i comproveu el funcionament enviant
+  un correu a check-auth@verifier.port25.com o a \url{https://mail-tester.com}.
+  Podeu adjuntar a l'entrega el resultat d'aquests tests.
+\end{tasca}
+
+\section{Extensions}
+
+Qui segueixi la metodologia ENTENDRE ha de realitzar, com a mínim, una de les 3
+extensions de la pràctica que es proposen a continuació.
+A diferència de la pràctica en sí, les extensions no estan tan pautades, pel
+que requeriran una mica d'investigació per part de l'estudiantat.
+
+\subsection{Protecció dels correus entrants}
 
 De la mateixa manera que a l'apartat anterior hem augmentat la reputació
 del nostre correu per demostrar al destinatari que som un remitent autoritzat,
 podem (i hauríem) de configurar Exim per denegar correus indicis flagrants de
 fraudulència.
 
-\subsection{Email spoofing}
+\subsubsection{Email spoofing}
 
 Per veure la necessitat d'implementar proteccions en correus electrònics
 anem a demostrar com de fàcil és suplantar la identitat en el protocol SMTP
@@ -469,12 +503,49 @@ QUIT
 Fixeu-vos que hem fet de servidor de correu electrònic. Verifiqueu que heu rebut
 el correu electrònic i no teniu forma de verificar el remitent autèntic.
 
-\subsection{Filtres de correus bàsics a exim}
+\subsubsection{Filtres de correus bàsics a exim}
 
-\section{Extensions}
-\subsection{Enviar a través d'un client}
-\subsection{Rebre a un client (POP/IMAP)}
+Havent vist els perills de no verificar ni que sigui l'adreça del remitent,
+queda clar que hauríem de modificar el nostre servidor.
+
+\begin{tasca}
+Realitza els canvis pertinents a exim per rebutjar correus que no superin
+la prova de SPF. Opcionalment es pot mirar de rebutjar també si no es supera
+la prova de DKIM o DMARC.
+\end{tasca}
+
 \subsection{Múltiples dominis}
+
+Aquesta extensió proposa utilitzar un únic servidor que sigui la destinació
+final de diversos dominis, i alhora poder enviar des de cadascun dels dominis.
+
+\begin{previ}
+  Creeu un nou domini que també apunti al servidor. Assigneu-li registres
+  MS i els TXT referents a SPF, DKIM, DMARC.
+\end{previ}
+
+\begin{tasca}
+  Configureu exim per acceptar enviar i rebre correus des dels dos dominis.
+  Adjunteu a l'entrega els dos enllaços de \textit{mail-tester}.
+
+  Nota: fixeu-vos que usuari@domini1 i usuari@domini2 porten al mateix usuari.
+  Exim no permet diferenciar els usuaris en funció del domini i crear bústies
+  virtuals, pel que si desitgeu realitzar això haureu de passar-vos a Postfix.
+\end{tasca}
+
+\subsection{Gestionar el correu des de fora del servidor}
+
+Finalment, aquesta extensió, tot i ser més complicada, té resultats molt pràctics.
+Es pretén utilitzar un MUA (ja sigui una aplicació de
+Thunderbird o un compte de Gmail) per enviar i rebre correus electrònics
+del servidor.
+
+\begin{tasca}
+  Utilitzeu dovecot per configurar un servidor IMAP al VPS i poder així rebre
+  correus electrònics des d'un MUA. És possible que exim no sigui completament
+  compatible amb dovecot i hagueu d'utilitzar un altre MTA com \textit{Postfix}.
+  Configureu també l'enviament de correus electrònics.
+\end{tasca}
 
 \section{Avaluació}
 \subsection{Entrega}
@@ -502,7 +573,10 @@ aquesta pràctica. Afegiu aquests fitxers també al fitxer comprimit de l'entreg
 
 Per exemple, podríeu indicar:
 \begin{itemize}
-  \item aaaa
+  \item Enllaç de \textit{mail-tester} demostrant que el correu sortint compleix tots
+  els requisits. Per exemple: \url{https://www.mail-tester.com/test-5n0n7stq5}.
+  \item Tutorial rectificat de com configurar DKIM amb Exim.
+  \item Tutorial de com verificar SPF amb Exim.
 \end{itemize}
 
 No ha de ser extens; aquests documents us serviran a vosaltres si mai heu de
@@ -517,11 +591,8 @@ Aquesta pràctica s'avaluarà de la següent manera. La puntuació màxima és 1
   \hline
   Concepte & Rang \\ \hline
   Fitxer de l'entrega (\texttt{P4\_GX.zip}) amb format correcte & $[-20, 0]$ \\
-  aaaa & $[0, 20]$ \\
-  aaaa & $[0, 10]$ \\
-  aaaa & $[0, 10]$ \\
-  Caaa & $[0, 20]$ \\
-  Caaa & $[0, 10]$ \\
+  Puntuació obtinguda a \textit{mail-tester}. & $[0, 40]$ \\
+  Extensions de la pràctica realitzades. & $[0, 30]$ \\
   Qualitat dels scripts/tutorials de \texttt{/entregues/p4} & $[0,30]$ \\
   El servidor presenta problemes de seguretat greus & $[-10,0]$ \\
   \hline
