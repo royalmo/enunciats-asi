@@ -26,9 +26,10 @@ pràctica 1 i 3, donat que treballarem sobre el VPS i domini creats anteriorment
   rounded corners
 ]
 Per aquesta pràctica el servidor hauria de poder enviar paquets TCP al 
-port 25. Si utilitzeu \textit{Hetzner}, haureu de realitzar una petició
+ports del servei de correu, d'entre els quals el port 25. Si utilitzeu
+\textit{Hetzner}, haureu de realitzar una petició
 per desbloquejar els ports a la secció de \textit{Limits}.
-La documentació de \textit{Hetzner} demana que els usuaris tinguin una
+La \href{https://docs.hetzner.com/robot/dedicated-server/faq/faq#why-can-i-not-send-any-mails-from-my-server}{documentació de \textit{Hetzner}} demana que els usuaris tinguin una
 antiguitat superior a un mes per treure els límits.
 \newline
 
@@ -41,9 +42,10 @@ l'apartat \ref{sec:plan-b}.
 Al finalitzar aquesta pràctica, l'estudiantat haurà:
 \begin{enumerate}
   \item Entès el funcionament i l'arquitectura del servei de correu.
-  \item Utilitzat \texttt{postfix} per enviar correus de forma local.
+  \item Utilitzat \texttt{exim} o \texttt{postfix} per enviar correus de forma local.
   \item Configurat un servidor de recepció de correus obert a Internet.
-  \item Configurat l'enviament de correus a Internet des del servidor.
+  \item Configurat l'enviament de correus a Internet des del servidor sense
+  utilitzar \textit{smarthosts} de tercers.
   \item Entès totes les tasques addicionals que cal dur a terme per
   esdevenir un remitent de correu fiable.
 \end{enumerate}
@@ -73,7 +75,7 @@ SMTP: des d'utilitzar TLS fins a autenticar els missatges en funció
 de registres en el DNS. Hi ha molts factors a tenir presents si
 es vol enviar correus electrònics a grans proveïdors com Gmail.
 Tot plegat fa que ens puguem preguntar si la S de SMTP segueix
-significant \textit{Simple}.
+significant \textit{Simple}. % Paco: si vols pots treure aquesta frase :)
 
 Aquesta pràctica pretén oferir una guia per poder convertir el vostre
 VPS en un servidor de correu i així no haver de pagar mensualitats 
@@ -81,7 +83,7 @@ massa elevades per només disposar d'una adreça electrònica corporativa.
 Hi ha projectes com \href{https://docs.mailway.app/self-host/}{MailWay} o 
 \href{https://docs.mailcow.email}{MailCow} que permeten configurar un
 servidor de correu en pocs passos, però en aquesta pràctica utilitzarem
-\texttt{postfix} per entendre realment què estem fent.
+\texttt{exim} o \texttt{portfix} per entendre realment què estem fent.
 
 \subsection{La visió original}
 
@@ -100,18 +102,18 @@ nou usuari al sistema.
 A més a més, cada ordinador tenia una adreça IP pública. Només calia
 fer coincidir el \textit{hostname} de la màquina amb el nom de domini
 d'aquesta i ja es disposaria d'un identificador accesible des de tot
-arreu. Per això veure que \texttt{postfix} posa complicacions si volem
+arreu. Per això veurem que \texttt{exim} posa complicacions si volem
 gesionar diversos noms de domini des d'un mateix servidor.
 
 Finalment, cal tenir present que no tots els ordinadors estaven
 encesos i encara menys connectats a internet tota l'estona (sobretot
-quan les connexions amb ADSL es facturaven per temps d'utilització).
+quan les companyies de telefonia facturaven per temps d'utilització).
 Així doncs, és possible que un usuari envii un correu electrònic a
 una màquina que està apagada, i que estigui desconnectat quan l'altre
 el pugui rebre. Per aquest motiu es van dissenyar els servidors MTA
-(\textit{Mail Transfer Agent}), que rebien el correu dels usuaris o
-MUA (\textit{Mail User Agent}) i s'encarregaven de dur-lo al
-destinatari i esperar si feia falta.
+(\textit{Mail Transfer Agent}) o \textit{smarthosts}, que rebien el
+correu dels usuaris o MUA (\textit{Mail User Agent}) i s'encarregaven
+de dur-lo al destinatari i esperar si feia falta.
 
 Actualment, tot i seguir podent utilitzar servidors MTA com si res,
 gairebé tots els servidors de correu estan sempre disponibles, pel
@@ -122,53 +124,139 @@ que han perdut la seva utilitat.
 El correu més bàsic que es pot enviar és entre dos usuaris de la
 mateixa màquina. En aquest apartat configurarem el servidor
 per poder enviar-vos correus entre els diferents integrants
-del grup.
+del grup. En la major part d'aquesta pràctica utilitzarem \texttt{exim},
+però podeu utilitzar qualsevol aplicació que compleixi el protocol.
+
+\begin{previ}
+  Insta\lgem eu-vos el paquets necessaris a la vostra màquina virtual:
+  \texttt{exim4 default-mta}. Aquest darrer és un paquet virtual que
+  conté \texttt{exim4-daemon-light} (MTA Exim) i \texttt{heirloom-mailx}
+  (MUA mail).
+\end{previ}
+
+Sempre que vulguem consultar la configuració d'\texttt{exim4} utilitzarem la
+comanda \texttt{debconf-show exim4-config}, i sempre que vulguem modificar-la
+ho podrem fer a través d'una interfície mitjançant la comanda
+\texttt{dpkg-reconfigure exim4-config}. Per a entendre les opcions,
+consulteu \texttt{man update-exim4.conf} i la documentació a
+\texttt{/usr/share/doc/exim4/README.Debian.gz}.
 
 \begin{tasca}
-  TODO install postfix, localhost, try, send mail to profe
+  Executeu la comanda per configurar \texttt{exim4} i seguiu els passos
+  per poder enviar i rebre correus entre els diferents usuaris de la
+  mateixa màquina. A quines adreces IP s'haurà d'acceptar connexions SMTP?
+
+  Redirigiu els correus de \texttt{root} als vostres usuaris mitjançant
+  l'interfície anterior i comproveu que els canvis s'han aplicat llegint el
+  fitxer \texttt{/etc/aliases}. Afegiu un nou àlies \texttt{tothom} que
+  permeti enviar correus a tots els usuaris (alumnes i \texttt{profe})
+  simultàniament.
+
+  Utilitzeu la comanda \texttt{mail tothom} per enviar un correu electrònic a
+  \texttt{tothom}, i comproveu que l'heu rebut amb \texttt{mail}. Fixeu-vos
+  com canvien alguns valors de la capçalera del correu al utilitzar un àlies.
 \end{tasca}
+
+\begin{tcolorbox}[
+  title=Atenció,
+  colback=red!10, colframe=red!50,
+  rounded corners
+]
+Al tenir una màquina connectada a internet, aquesta és vulnerable a atacs
+externs. Si no es configura \texttt{exit} adequadament, aquest és capaç
+d'acceptar correus provinents de desconeguts. Un dels possibles escenaris
+és el que es mostra a la figura \ref{fig:escenari-malicios}, on el servidor
+permet reenviar correus amb qualsevol domini i qualsevol usuari d'origen.
+\newline
+
+Us recomanem utilitzar el tallafocs per denegar tots els paquets de SMTP
+entrants fins que estigueu convençuts que el servidor està ben configuat.
+\end{tcolorbox}
+
+\begin{figure}[h]
+  \includegraphics[width=0.6\linewidth]{assets/p4-escenari-malicios.png}
+  \centering
+  \caption{
+    Una persona amb males intencions pot utilitzar un servidor de correu
+    mal configurat per difondre massivament correus electrònics. A part de
+    ser còmplices (indirectament) d'un atac, aconseguirem que la nostra adreça
+    IP aparegui en llistes negres i tots els correus sortints estiguin rebutjats
+    o vagin a parar al correu brossa.
+    }
+  \label{fig:escenari-malicios}
+\end{figure}
 
 \subsection{Recepció des d'Internet}
 
+El següent pas serà poder rebre correus electrònics d'Internet. Evidentment,
+només acceptarem correus que vagin destinats al nostre domini.
+
 \begin{previ}
-  TODO posar registre MX al DNS. Es poden posar múltiples,
-  perquè si igualment SMTP funcionava amb downtimes?
+  Torneu a executar la comanda per configurar \texttt{exim4} per ara poder
+  rebre correus de qualsevol adreça IP. Ara haureu d'usar el mode
+  \textit{internethost}.
+
+  Després, afegiu un registre MX que indiqui que els correus del domini
+  del servidor s'han d'enviar al domini del servidor. Al només tenir un
+  servidor que gestioni els correus d'aquest domini, no importa el valor
+  de prioritat que indiqueu.
+
+  Fixeu-vos que el registre MX es podria considerar com a redundant en aquests
+  casos, donat que és idèntic que el registre A/AAAA. De totes formes, es
+  recomana posar-lo igualment per augmentar la reputació del domini
+  (vegeu apartat \ref{sec:reputation}), i perquè alguns servidors de
+  correu només miren el registre MX.
 \end{previ}
 
-\begin{tasca}
-  Enviar mail des de l'adreça UPC al vps, un per cada usuari.
-\end{tasca}
-
-\subsection{Us d'alies}
+Recordeu modificar el tallafocs per permetre peticions entrants als ports
+del protocol SMTP.
 
 \begin{tasca}
-  Posar esutdiantat@ que redirigeixi als dos estudiants, tots@ també a profe. Enviar mail.
+  Envieu un correu des del vostre compte de la UPC (és a dir, Gmail) a
+  l'àlies \texttt{tothom}. Fixeu-vos que Google, com la majoria de
+  MUA, afegeix diversos camps addicionals al correu electrònic. Alguns
+  seran de vital importància més endavant.
+
+  Proveu d'enviar un correu a una adreça existent. Què succeeix? I si
+  atureu el servidor i envieu un correu?
 \end{tasca}
+
+% \subsection{Us d'alies} % Finalment ho he integrat en els passos anteriors
+
+% \begin{tasca}
+%   Posar esutdiantat@ que redirigeixi als dos estudiants, tots@ també a profe. Enviar mail.
+% \end{tasca}
 
 \subsection{Enviament a través d'Internet}
 
-TODO Potser posar el warning aquí?
+Per poder completar el cicle només falta aconseguir enviar correus a l'exterior.
+Si heu realitzat correctament la recepció de correus electrònics, ja haurieu
+de poder enviar-ne.
 
 \begin{previ}
-  Comprovar que hi hagi els ports
+  Comproveu que pugueu realitzar connexions sortints als ports de SMTP
+  mitjançant \textit{netcat}. Potser haureu de demanar al proveïdor que
+  us habiliti aquests ports.
 
-  nc -vv smtp.google.com 25
-  nc -vv smtp.google.com 465
+  % nc -vv smtp.google.com 25
+  % nc -vv smtp.google.com 465
 \end{previ}
 
 \begin{tasca}
-  Envieu mails a altres grups. Podeu inclús parlar-vos amb grups
+  Envieu correus electrònics als servidors dels altres grups.
+  Podeu inclús parlar-vos amb grups
   que no tinguin adreça pública, sempre i quan estigueu connectats
-  a la VPN i tinguin associat un nom de domini a l'IP pertinent.
-
-  Fixeu-vos que postfix
-  i exim son dues implementacions diferents del protocol i s'entenen.
+  a la VPN i tinguin associat un nom de domini a l'adreça IP pertinent.
 \end{tasca}
 
 \begin{tasca}
-  envieu un mail al vostre compte UPC (que gestiona Google). Veureu que apareix a SPAM.
-  Si no apareix, mireu la bústia de correu de postfix per si
-  Google us ha retornat un missatge d'error.
+  Envieu un correu des del servidor a la vostra adreça personal de la UPC.
+  Veureu que el rebreu a la carpeta de correu brossa.
+  
+  Si no el rebeu, segurament
+  hagueu rebut una resposta per part de Gmail a l'adreça remitent (és a dir,
+  al servidor) indicant quin és el probema (per exemple, que l'adreça IP està
+  banejada). % Com es diu banned en català?
 \end{tasca}
 
 \subsubsection{Alternativa per si no es pot utilitzar els ports de SMTP}
@@ -188,6 +276,8 @@ Així doncs, pel que queda d'enunciat de la pràctica, si no podeu
 enviar correus a través d'Internet amb els ports de SMTP, ...
 
 \section{Guanyar-se la confiança dels gegants}
+\label{sec:reputation}
+
 \subsection{FQDN}
 \subsection{Blacklists}
 \subsection{SPF}
