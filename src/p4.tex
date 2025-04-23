@@ -398,11 +398,13 @@ tots els missatges sortints amb la seva clau privada, emmagatzemada al servidor.
   \end{enumerate}
 \end{tasca}
 
-Podeu seguir algun tutorial com el següent:
-\url{https://bobcares.com/blog/configuring-dkim-for-exim/}. Possiblement
+Podeu seguir algun tutorial com algun dels següents:
+\url{https://bobcares.com/blog/configuring-dkim-for-exim/} o \url{https://www.sinologic.net/2015-04/como-instalar-un-servidor-exim-en-debian-con-spf-y-dkim.html}. Possiblement
 pel vostre cas hi haurà certs detalls a canviar. Us pot ser útil
 consultar els errors i \textit{logs} que exim es va trobant al fitxer
 \texttt{/var/log/exim4/mainlog}.
+
+
 
 Pel darrer pas (publicar la clau pública al DNS), heu de copiar els continguts
 del fitxer de la clau pública que hagueu generat al registrador de DNS en
@@ -566,7 +568,7 @@ Port SSH: 22
 \end{verbatim}
 
 La majoria de dades son referents a les pràctiques anteriors. Es demana
-que les torneu a escriure, així teniu la possibiltat de canviar-les.
+que les torneu a escriure, així teniu la possibilitat de canviar-les.
 
 Al servidor, creeu el directori \texttt{/entregues} a l'arrel, i a dins un
 directori \texttt{/entregues/p4}. Allà hi heu de deixar els scripts i/o manuals
