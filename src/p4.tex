@@ -52,7 +52,7 @@ Al finalitzar aquesta pràctica, l'estudiantat haurà:
 
 \subsection{Condicions}
 
-Aqeusta pràctica està cal·librada per ésser treballada en equips de 2 persones,
+Aquesta pràctica està ca\l.librada per ésser treballada en equips de 2 persones,
 i té una durada de 2 setmanes.
 
 \subsection{Lliuraments}
@@ -64,18 +64,18 @@ està detallat a l'apartat \ref{sec:entrega}.
 \section{El correu electrònic}
 
 El correu electrònic que coneixem avui es segueix basant en la
-implementació original que va aparéixer a ARPANET l'any
+implementació original que va aparèixer a ARPANET l'any
 1981, quan es va publicar les especificacions del protocol SMTP
 (\textit{Simple Mail Transfer Protocol}). Aleshores, Internet consistia
 en una xarxa amb molt pocs nodes i de difícil accés.
 
 L'extensió d'Internet i la facilitat d'enviar correus massivament o bé
-impersonant algú altre han obligat crear extensions de seguretat per
+impersonalitzant algú altre han obligat crear extensions de seguretat per
 SMTP: des d'utilitzar TLS fins a autenticar els missatges en funció
 de registres en el DNS. Hi ha molts factors a tenir presents si
 es vol enviar correus electrònics a grans proveïdors com Gmail.
 Tot plegat fa que ens puguem preguntar si la S de SMTP segueix
-significant \textit{Simple}. % Paco: si vols pots treure aquesta frase :)
+significant \textit{Simple}. % Paco: si vols pots treure aquesta frase :) || No, m'agrada molt!
 
 Aquesta pràctica pretén oferir una guia per poder convertir el vostre
 VPS en un servidor de correu i així no haver de pagar mensualitats 
@@ -101,31 +101,30 @@ nou usuari al sistema.
 
 A més a més, cada ordinador tenia una adreça IP pública. Només calia
 fer coincidir el \textit{hostname} de la màquina amb el nom de domini
-d'aquesta i ja es disposaria d'un identificador accesible des de tot
+d'aquesta i ja es disposaria d'un identificador accessible des de tot
 arreu. Per això veurem que \texttt{exim} posa complicacions si volem
-gesionar diversos noms de domini des d'un mateix servidor.
+gestionar diversos noms de domini des d'un mateix servidor.
 
 Finalment, cal tenir present que no tots els ordinadors estaven
-encesos i encara menys connectats a internet tota l'estona (sobretot
+encesos i encara menys connectats a Internet tota l'estona (sobretot
 quan les companyies de telefonia facturaven per temps d'utilització).
-Així doncs, és possible que un usuari envii un correu electrònic a
-una màquina que està apagada, i que estigui desconnectat quan l'altre
-el pugui rebre. Per aquest motiu es van dissenyar els servidors MTA
-(\textit{Mail Transfer Agent}) o \textit{smarthosts}, que rebien el
-correu dels usuaris o MUA (\textit{Mail User Agent}) i s'encarregaven
-de dur-lo al destinatari i esperar si feia falta.
+Així doncs, és possible que un usuari envii un correu electrònic a una
+màquina que està apagada, i que aquest usuari tingui la sessió tancada
+quan l'altre màquina pugui rebre el missatge. Per aquest motiu es van
+dissenyar els servidors MTA (\textit{Mail Transfer Agent}), que rebien
+el correu dels usuaris o MUA (\textit{Mail User Agent}) i
+s'encarregaven de dur-lo a la bústia del destinatari fins que l'usuari
+la consultava. Actualment, gairebé tots els servidors de correu estan
+sempre disponibles.
 
-Actualment, tot i seguir podent utilitzar servidors MTA com si res,
-gairebé tots els servidors de correu estan sempre disponibles, pel
-que han perdut la seva utilitat.
-
-\subsection{Enviament en local}
+\subsection{Enviament i recepció local}
 
 El correu més bàsic que es pot enviar és entre dos usuaris de la
-mateixa màquina. En aquest apartat configurarem el servidor
-per poder enviar-vos correus entre els diferents integrants
-del grup. En la major part d'aquesta pràctica utilitzarem \texttt{exim},
-però podeu utilitzar qualsevol aplicació que compleixi el protocol.
+mateixa màquina. En aquest apartat configurareu el servidor per poder
+intercanviar correus entre els diferents usuaris de la mateixa màquina
+(integrants del grup). En la major part d'aquesta pràctica utilitzarem
+\texttt{exim}, però podeu utilitzar qualsevol altre servei de correu
+que compleixi el protocol.
 
 \begin{previ}
   Insta\lgem eu-vos el paquets necessaris a la vostra màquina virtual:
@@ -163,7 +162,7 @@ consulteu \texttt{man update-exim4.conf} i la documentació a
   rounded corners
 ]
 Al tenir una màquina connectada a internet, aquesta és vulnerable a atacs
-externs. Si no es configura \texttt{exit} adequadament, aquest és capaç
+externs. Si no es configura \texttt{exim} adequadament, aquest és capaç
 d'acceptar correus provinents de desconeguts. Un dels possibles escenaris
 és el que es mostra a la figura \ref{fig:escenari-malicios}, on el servidor
 permet reenviar correus amb qualsevol domini i qualsevol usuari d'origen.
@@ -224,7 +223,7 @@ del protocol SMTP.
 % \subsection{Us d'alies} % Finalment ho he integrat en els passos anteriors
 
 % \begin{tasca}
-%   Posar esutdiantat@ que redirigeixi als dos estudiants, tots@ també a profe. Enviar mail.
+%   Posar estudiantat@ que redirigeixi als dos estudiants, tots@ també a profe. Enviar mail.
 % \end{tasca}
 
 \subsection{Enviament a través d'Internet}
@@ -253,21 +252,22 @@ de poder enviar-ne.
   Envieu un correu des del servidor a la vostra adreça personal de la UPC.
   Veureu que el rebreu a la carpeta de correu brossa.
   
-  Si no el rebeu, segurament
-  hagueu rebut una resposta per part de Gmail a l'adreça remitent (és a dir,
-  al servidor) indicant quin és el probema (per exemple, que l'adreça IP està
-  banejada). % Com es diu banned en català?
+  Si no el rebeu, segurament hagueu rebut una resposta per part de
+  Gmail a l'adreça remitent (és a dir, al servidor) indicant quin és
+  el problema (per exemple, que l'adreça IP està prohibida
+  \textit{(banned)}. % Com es diu banned en català? -> prohibida
 \end{tasca}
 
 \subsubsection{Alternativa per si no es pot utilitzar els ports de SMTP}
 \label{sec:plan-b}
 
 Degut a l'abús que fan els criminals dels VPS per enviar correus
-fraudulents, els proveïdors solen filtrar les connexions sortints
-als ports de SMTP. Moltes vegades és suficient amb un missatge per
-eliminar aquest límit, però en alguns casos aquests no s'aconsegueix.
+fraudulents, els proveïdors solen filtrar les connexions sortints als
+ports de SMTP. Moltes vegades és suficient l'enviament d'un missatge
+de petició al proveïdor per eliminar aquest límit, però en alguns
+casos no s'aconsegueix.
 
-Si vulguéssiu utilitzar el correu de forma comercial no tindríeu cap
+Si volguéssiu utilitzar el correu de forma comercial no tindríeu cap
 altre remei que esperar o canviar de proveïdor, però els terminis
 d'aquesta pràctica obliguen a trobar formes alternatives d'experimentar
 amb SMTP.
@@ -286,12 +286,12 @@ afegit diverses extensions al protocol SMTP per verificar que el correu en
 qüestió és legítim. Alguns son protocols nous, altres son simplement bones
 pràctiques.
 
-En l'actualitat és escencial poder complir amb tots els requeriments que els
+En l'actualitat és essencial poder complir amb tots els requeriments que els
 grans proveïdors de correu electrònic comproven per tal de tenir un servidor
 de correu útil.
 
 En aquest apartat es detalla tot el que s'ha de tenir present per deixar
-d'apareixer a la carpeta de correu brossa.
+d'aparèixer a la carpeta de correu brossa.
 
 \subsection{DNS invers}
 
@@ -322,7 +322,7 @@ dels llocs on us demani pagar (si més no, no per aquesta pràctica).
 La llista en la que apareixereu amb més probabilitat és la \textit{RATS-NoPtr},
 una llista que apunta totes les adreces sense DNS invers configurat
 correctament. Només cal configurar el DNS invers i omplir el formulari per
-(al cap d'uns dies) desaparéixer d'aquesta llista.
+(al cap d'uns dies) desaparèixer d'aquesta llista.
 
 \subsection{Verificació del remitent amb SPF}
 
@@ -354,7 +354,7 @@ un caràcter que determinarà el comportament de SPF:
   \item \texttt{?all}: no especifica cap política clara pel trànsit no autoritzat (\textit{neutral}).
 \end{itemize}
 
-Tambe es pot utilitzar \texttt{include} per incloure tots els remitents d'un altre
+També es pot utilitzar \texttt{include} per incloure tots els remitents d'un altre
 domini:
 
 \begin{verbatim}
@@ -398,9 +398,11 @@ tots els missatges sortints amb la seva clau privada, emmagatzemada al servidor.
   \end{enumerate}
 \end{tasca}
 
-Podeu seguir algun tutorial com el següent: \url{https://bobcares.com/blog/configuring-dkim-for-exim/}. Possiblement pel vostre cas hi haurà certs detalls
-a canviar. Us pot ser útil consultar els errors i \textit{logs} que exim es
-va trobant al fitxer \texttt{/var/log/exim4/mainlog}.
+Podeu seguir algun tutorial com el següent:
+\url{https://bobcares.com/blog/configuring-dkim-for-exim/}. Possiblement
+pel vostre cas hi haurà certs detalls a canviar. Us pot ser útil
+consultar els errors i \textit{logs} que exim es va trobant al fitxer
+\texttt{/var/log/exim4/mainlog}.
 
 Pel darrer pas (publicar la clau pública al DNS), heu de copiar els continguts
 del fitxer de la clau pública que hagueu generat al registrador de DNS en
